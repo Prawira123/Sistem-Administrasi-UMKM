@@ -1,0 +1,31 @@
+flowchart LR
+  A[Administrator / Kasir]:::ext
+  P31("3.1<br/>Input Data<br/>Barang Masuk"):::proc
+  P32("3.2<br/>Simpan Transaksi<br/>Barang Masuk"):::proc
+  P33("3.3<br/>Perbarui Stok dan<br/>HPP Rata-rata"):::proc
+  P34("3.4<br/>Catat Kartu Stok<br/>dan Tutup Notifikasi"):::proc
+  P35("3.5<br/>Catat Kas Keluar"):::proc
+  D3[["D3 | barang"]]:::store
+  D4[["D4 | supplier"]]:::store
+  D5[["D5 | barang_masuk"]]:::store
+  D7[["D7 | kartu_stok"]]:::store
+  D8[["D8 | notifikasi_stok"]]:::store
+  D11[["D11 | kas"]]:::store
+  A -- "supplier, no faktur, tanggal,<br/>barang, jumlah, harga beli" --> P31
+  D4 -- data supplier --> P31
+  D3 -- data barang --> P31
+  P31 -- data barang masuk tervalidasi --> P32
+  P32 -- header dan detail --> D5
+  P32 -- daftar item masuk --> P33
+  D3 -- stok lama, HPP lama --> P33
+  P33 -- stok baru, HPP rata-rata baru,<br/>harga beli terakhir --> D3
+  P33 -- stok sebelum dan sesudah --> P34
+  P34 -- mutasi masuk --> D7
+  P34 -- status selesai --> D8
+  P32 -- total pembelian --> P35
+  P35 -- kas keluar pembelian_barang --> D11
+  P32 -- bukti barang masuk --> A
+
+  classDef ext fill:#e8eef6,stroke:#2b4a6f,stroke-width:1.5px,color:#13233a
+  classDef proc fill:#e3f1ee,stroke:#1d6b5f,stroke-width:1.5px,color:#0f2f2a
+  classDef store fill:#f6efe0,stroke:#8a6a2a,stroke-width:1.2px,color:#3b2d10

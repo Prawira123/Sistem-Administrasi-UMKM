@@ -1,0 +1,107 @@
+erDiagram
+  users ||--o{ barang_masuk : "mencatat"
+  users ||--o{ penjualan : "melayani"
+  users ||--o{ stok_opname : "melaksanakan"
+  users |o--o{ stok_opname : "menyetujui"
+  stok_opname ||--|{ detail_stok_opname : "berisi"
+  barang ||--o{ detail_stok_opname : "dihitung dalam"
+  barang ||--o{ kartu_stok : "memiliki mutasi"
+  barang_masuk |o--o{ kartu_stok : "menghasilkan"
+  penjualan |o--o{ kartu_stok : "menghasilkan"
+  stok_opname |o--o{ kartu_stok : "menghasilkan"
+  users ||--o{ kartu_stok : "memicu"
+  barang ||--o{ notifikasi_stok : "memicu"
+  users |o--o{ notifikasi_stok : "membaca"
+  users {
+    bigint id_user PK
+    varchar nama
+    varchar username UK
+    varchar email UK
+    varchar password
+    enum role
+    enum status
+    datetime terakhir_login
+  }
+  barang {
+    bigint id_barang PK
+    varchar kode_barang UK
+    int id_kategori FK
+    varchar nama_barang
+    varchar satuan
+    decimal harga_beli_terakhir
+    decimal hpp_rata_rata
+    decimal harga_jual
+    int stok
+    int stok_minimum
+    enum status
+  }
+  barang_masuk {
+    bigint id_barang_masuk PK
+    varchar kode_barang_masuk UK
+    varchar no_faktur
+    int id_supplier FK
+    bigint id_user FK
+    date tanggal_masuk
+    decimal total_pembelian
+    enum metode_pembayaran
+    varchar keterangan
+  }
+  penjualan {
+    bigint id_penjualan PK
+    varchar no_transaksi UK
+    bigint id_user FK
+    datetime tanggal_penjualan
+    int total_item
+    decimal total_harga
+    decimal total_hpp
+    enum metode_pembayaran
+    decimal jumlah_bayar
+    decimal kembalian
+    enum status
+    varchar keterangan
+  }
+  stok_opname {
+    bigint id_stok_opname PK
+    varchar kode_opname UK
+    bigint id_user FK
+    date tanggal_opname
+    enum status
+    bigint disetujui_oleh FK
+    datetime disetujui_pada
+    varchar keterangan
+  }
+  detail_stok_opname {
+    bigint id_detail_opname PK
+    bigint id_stok_opname FK
+    bigint id_barang FK
+    int stok_sistem
+    int stok_fisik
+    int selisih
+    varchar keterangan
+  }
+  kartu_stok {
+    bigint id_kartu_stok PK
+    bigint id_barang FK
+    datetime tanggal
+    enum jenis_mutasi
+    bigint id_barang_masuk FK
+    bigint id_penjualan FK
+    bigint id_stok_opname FK
+    int jumlah_masuk
+    int jumlah_keluar
+    int stok_sebelum
+    int stok_sesudah
+    decimal hpp_satuan
+    varchar keterangan
+    bigint id_user FK
+  }
+  notifikasi_stok {
+    bigint id_notifikasi PK
+    bigint id_barang FK
+    int stok_saat_ini
+    int stok_minimum
+    varchar pesan
+    enum status
+    bigint dibaca_oleh FK
+    datetime dibaca_pada
+  }

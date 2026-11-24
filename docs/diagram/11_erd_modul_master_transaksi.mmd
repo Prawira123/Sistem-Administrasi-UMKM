@@ -1,0 +1,90 @@
+erDiagram
+  kategori_barang ||--o{ barang : "mengelompokkan"
+  supplier ||--o{ barang_masuk : "memasok"
+  users ||--o{ barang_masuk : "mencatat"
+  barang_masuk ||--|{ detail_barang_masuk : "berisi"
+  barang ||--o{ detail_barang_masuk : "dibeli dalam"
+  users ||--o{ penjualan : "melayani"
+  penjualan ||--|{ detail_penjualan : "berisi"
+  barang ||--o{ detail_penjualan : "terjual dalam"
+  users {
+    bigint id_user PK
+    varchar nama
+    varchar username UK
+    varchar email UK
+    varchar password
+    enum role
+    enum status
+    datetime terakhir_login
+  }
+  kategori_barang {
+    int id_kategori PK
+    varchar nama_kategori UK
+    varchar keterangan
+  }
+  barang {
+    bigint id_barang PK
+    varchar kode_barang UK
+    int id_kategori FK
+    varchar nama_barang
+    varchar satuan
+    decimal harga_beli_terakhir
+    decimal hpp_rata_rata
+    decimal harga_jual
+    int stok
+    int stok_minimum
+    enum status
+  }
+  supplier {
+    int id_supplier PK
+    varchar kode_supplier UK
+    varchar nama_supplier
+    varchar nama_kontak
+    varchar no_telepon
+    text alamat
+    enum status
+  }
+  barang_masuk {
+    bigint id_barang_masuk PK
+    varchar kode_barang_masuk UK
+    varchar no_faktur
+    int id_supplier FK
+    bigint id_user FK
+    date tanggal_masuk
+    decimal total_pembelian
+    enum metode_pembayaran
+    varchar keterangan
+  }
+  detail_barang_masuk {
+    bigint id_detail_masuk PK
+    bigint id_barang_masuk FK
+    bigint id_barang FK
+    int jumlah
+    decimal harga_beli
+    decimal subtotal
+    date tanggal_kadaluarsa
+  }
+  penjualan {
+    bigint id_penjualan PK
+    varchar no_transaksi UK
+    bigint id_user FK
+    datetime tanggal_penjualan
+    int total_item
+    decimal total_harga
+    decimal total_hpp
+    enum metode_pembayaran
+    decimal jumlah_bayar
+    decimal kembalian
+    enum status
+    varchar keterangan
+  }
+  detail_penjualan {
+    bigint id_detail_penjualan PK
+    bigint id_penjualan FK
+    bigint id_barang FK
+    int jumlah
+    decimal harga_jual
+    decimal hpp_satuan
+    decimal subtotal
+    decimal subtotal_hpp
+  }

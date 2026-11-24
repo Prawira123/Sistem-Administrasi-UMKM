@@ -1,0 +1,129 @@
+erDiagram
+  users ||--o{ barang_masuk : "mencatat"
+  users ||--o{ penjualan : "melayani"
+  kategori_pengeluaran ||--o{ pengeluaran_operasional : "mengelompokkan"
+  users ||--o{ pengeluaran_operasional : "mencatat"
+  penjualan |o--o| kas : "dicatat sebagai"
+  barang_masuk |o--o| kas : "dicatat sebagai"
+  pengeluaran_operasional |o--o| kas : "dicatat sebagai"
+  validasi_kas |o--o| kas : "disesuaikan dengan"
+  users ||--o{ kas : "mencatat"
+  users ||--o{ validasi_kas : "memvalidasi"
+  barang ||--o{ hpp_periode : "dihitung HPP-nya"
+  users ||--o{ hpp_periode : "menjalankan"
+  users ||--o{ riwayat_ai : "bertanya"
+  users {
+    bigint id_user PK
+    varchar nama
+    varchar username UK
+    varchar email UK
+    varchar password
+    enum role
+    enum status
+    datetime terakhir_login
+  }
+  barang {
+    bigint id_barang PK
+    varchar kode_barang UK
+    int id_kategori FK
+    varchar nama_barang
+    varchar satuan
+    decimal harga_beli_terakhir
+    decimal hpp_rata_rata
+    decimal harga_jual
+    int stok
+    int stok_minimum
+    enum status
+  }
+  barang_masuk {
+    bigint id_barang_masuk PK
+    varchar kode_barang_masuk UK
+    varchar no_faktur
+    int id_supplier FK
+    bigint id_user FK
+    date tanggal_masuk
+    decimal total_pembelian
+    enum metode_pembayaran
+    varchar keterangan
+  }
+  penjualan {
+    bigint id_penjualan PK
+    varchar no_transaksi UK
+    bigint id_user FK
+    datetime tanggal_penjualan
+    int total_item
+    decimal total_harga
+    decimal total_hpp
+    enum metode_pembayaran
+    decimal jumlah_bayar
+    decimal kembalian
+    enum status
+    varchar keterangan
+  }
+  kategori_pengeluaran {
+    int id_kategori_pengeluaran PK
+    varchar nama_kategori UK
+    varchar keterangan
+  }
+  pengeluaran_operasional {
+    bigint id_pengeluaran PK
+    varchar kode_pengeluaran UK
+    int id_kategori_pengeluaran FK
+    bigint id_user FK
+    date tanggal_pengeluaran
+    varchar deskripsi
+    decimal jumlah
+    enum metode_pembayaran
+    varchar bukti
+  }
+  kas {
+    bigint id_kas PK
+    datetime tanggal
+    enum jenis
+    enum kategori
+    bigint id_penjualan FK,UK
+    bigint id_barang_masuk FK,UK
+    bigint id_pengeluaran FK,UK
+    bigint id_validasi_kas FK,UK
+    decimal jumlah
+    varchar keterangan
+    bigint id_user FK
+  }
+  validasi_kas {
+    bigint id_validasi_kas PK
+    date tanggal UK
+    decimal total_tunai_sistem
+    decimal uang_fisik
+    decimal selisih
+    enum status
+    varchar catatan
+    bigint id_user FK
+  }
+  hpp_periode {
+    bigint id_hpp PK
+    bigint id_barang FK
+    date periode_awal
+    date periode_akhir
+    int qty_persediaan_awal
+    decimal nilai_persediaan_awal
+    int qty_pembelian
+    decimal nilai_pembelian
+    int qty_persediaan_akhir
+    decimal nilai_persediaan_akhir
+    decimal total_hpp
+    int qty_terjual
+    decimal hpp_per_unit
+    bigint id_user FK
+  }
+  riwayat_ai {
+    bigint id_riwayat_ai PK
+    bigint id_user FK
+    text pertanyaan
+    enum topik
+    json konteks_data
+    mediumtext jawaban
+    varchar model
+    enum status
+    varchar pesan_error
+    int waktu_respons_ms
+  }

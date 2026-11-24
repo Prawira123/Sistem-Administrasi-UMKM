@@ -1,0 +1,33 @@
+flowchart LR
+  A[Administrator]:::ext
+  G[Gemini API]:::ext
+  P81("8.1<br/>Terima dan<br/>Klasifikasi Pertanyaan"):::proc
+  P82("8.2<br/>Ambil Data<br/>Konteks"):::proc
+  P83("8.3<br/>Susun Prompt dan<br/>Kirim ke Gemini"):::proc
+  P84("8.4<br/>Simpan dan<br/>Tampilkan Jawaban"):::proc
+  D3[["D3 | barang"]]:::store
+  D6[["D6 | penjualan"]]:::store
+  D8[["D8 | notifikasi_stok"]]:::store
+  D10[["D10 | pengeluaran_operasional"]]:::store
+  D11[["D11 | kas"]]:::store
+  D13[["D13 | hpp_periode"]]:::store
+  D14[["D14 | riwayat_ai"]]:::store
+  A -- pertanyaan bahasa sehari-hari --> P81
+  P81 -- topik: stok / keuangan / umum --> P82
+  D3 -- stok terkini --> P82
+  D8 -- barang hampir habis --> P82
+  D6 -- total pendapatan --> P82
+  D10 -- total beban --> P82
+  D11 -- saldo dan arus kas --> P82
+  D13 -- HPP --> P82
+  P82 -- ringkasan data JSON --> P83
+  P83 -- prompt --> G
+  G -- respons teks --> P83
+  P83 -- jawaban --> P84
+  P84 -- pertanyaan, konteks, jawaban --> D14
+  D14 -- riwayat percakapan --> P84
+  P84 -- jawaban AI --> A
+
+  classDef ext fill:#e8eef6,stroke:#2b4a6f,stroke-width:1.5px,color:#13233a
+  classDef proc fill:#e3f1ee,stroke:#1d6b5f,stroke-width:1.5px,color:#0f2f2a
+  classDef store fill:#f6efe0,stroke:#8a6a2a,stroke-width:1.2px,color:#3b2d10

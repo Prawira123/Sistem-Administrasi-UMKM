@@ -1,0 +1,15 @@
+flowchart LR
+  A[Administrator]:::ext
+  K[Kasir]:::ext
+  G[Gemini API]:::ext
+  S("0<br/>Sistem Informasi Monitoring<br/>Stok dan Keuangan"):::proc
+  A -- "data login, data pengguna, data kategori barang,<br/>data barang, data supplier, data barang masuk,<br/>data transaksi penjualan, data stok opname,<br/>persetujuan stok opname,<br/>data pengeluaran operasional, data modal/prive,<br/>data uang fisik kas, periode HPP dan laporan,<br/>pertanyaan AI" --> S
+  S -- "info login, info stok real-time,<br/>notifikasi stok minimum, struk penjualan,<br/>info HPP, hasil validasi kas,<br/>laporan pergerakan stok, laporan arus kas,<br/>laporan laba rugi, jawaban AI" --> A
+  K -- "data login, data transaksi penjualan,<br/>data barang, data barang masuk,<br/>data stok opname, kata kunci cek stok" --> S
+  S -- "info login, struk penjualan, info stok barang,<br/>notifikasi stok minimum, info barang masuk" --> K
+  S -- "prompt: pertanyaan + ringkasan data" --> G
+  G -- "respons teks" --> S
+
+  classDef ext fill:#e8eef6,stroke:#2b4a6f,stroke-width:1.5px,color:#13233a
+  classDef proc fill:#e3f1ee,stroke:#1d6b5f,stroke-width:1.5px,color:#0f2f2a
+  classDef store fill:#f6efe0,stroke:#8a6a2a,stroke-width:1.2px,color:#3b2d10
