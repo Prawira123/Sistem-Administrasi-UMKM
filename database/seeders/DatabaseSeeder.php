@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             KategoriPengeluaranSeeder::class,
             SupplierSeeder::class,
             BarangSeeder::class,
+            ContohTransaksiSeeder::class, // barang masuk contoh lewat service (stok awal + kartu stok + kas)
         ]);
     }
 }

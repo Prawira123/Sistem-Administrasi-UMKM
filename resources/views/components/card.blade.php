@@ -1,0 +1,24 @@
+{{--
+    Kartu konten. Slot opsional: title, actions, footer.
+    Contoh: <x-card title="Ringkasan"> ... </x-card>
+--}}
+@props(['title' => null, 'padding' => true])
+
+<div {{ $attributes->merge(['class' => 'rounded-xl border border-gray-200 bg-white shadow-sm']) }}>
+    @if ($title || isset($actions))
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 px-5 py-3">
+            <h2 class="text-base font-semibold text-gray-800">{{ $title }}</h2>
+            @isset($actions)
+                <div class="flex items-center gap-2">{{ $actions }}</div>
+            @endisset
+        </div>
+    @endif
+
+    <div @class(['p-5' => $padding])>
+        {{ $slot }}
+    </div>
+
+    @isset($footer)
+        <div class="border-t border-gray-200 px-5 py-3">{{ $footer }}</div>
+    @endisset
+</div>

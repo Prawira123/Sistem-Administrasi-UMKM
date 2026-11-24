@@ -63,6 +63,8 @@ class BarangSeeder extends Seeder
             ],
         ];
 
+        // Stok, HPP rata-rata, dan harga beli terakhir memakai default 0;
+        // nilainya baru terisi lewat transaksi barang masuk.
         foreach ($data as $row) {
             Barang::updateOrCreate(
                 ['kode_barang' => $row['kode_barang']],
@@ -70,10 +72,7 @@ class BarangSeeder extends Seeder
                     'id_kategori' => $kategori[$row['kategori']],
                     'nama_barang' => $row['nama_barang'],
                     'satuan' => $row['satuan'],
-                    'harga_beli_terakhir' => 0,
-                    'hpp_rata_rata' => 0,
                     'harga_jual' => $row['harga_jual'],
-                    'stok' => 0,
                     'stok_minimum' => $row['stok_minimum'],
                     'status' => 'aktif',
                 ]

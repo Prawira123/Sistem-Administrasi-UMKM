@@ -39,6 +39,20 @@ class Penjualan extends Model
         ];
     }
 
+    /**
+     * Pembatalan hanya untuk transaksi selesai di bulan berjalan: laporan dan HPP periode
+     * sebelumnya sudah berjalan, sehingga tidak boleh berubah karena pembatalan.
+     */
+    public function isBulanBerjalan(): bool
+    {
+        return $this->tanggal_penjualan->isSameMonth(now());
+    }
+
+    public function bisaDibatalkan(): bool
+    {
+        return $this->status === 'selesai' && $this->isBulanBerjalan();
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'id_user', 'id_user');

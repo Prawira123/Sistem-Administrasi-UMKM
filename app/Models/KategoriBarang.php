@@ -2,11 +2,16 @@
 
 namespace App\Models;
 
+use Database\Factories\KategoriBarangFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class KategoriBarang extends Model
 {
+    /** @use HasFactory<KategoriBarangFactory> */
+    use HasFactory;
+
     protected $table = 'kategori_barang';
 
     protected $primaryKey = 'id_kategori';

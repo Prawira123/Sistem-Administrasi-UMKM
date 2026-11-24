@@ -13,6 +13,14 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
+    public const ROLE_ADMINISTRATOR = 'administrator';
+
+    public const ROLE_KASIR = 'kasir';
+
+    public const STATUS_AKTIF = 'aktif';
+
+    public const STATUS_NONAKTIF = 'nonaktif';
+
     protected $table = 'users';
 
     protected $primaryKey = 'id_user';
@@ -42,12 +50,25 @@ class User extends Authenticatable
 
     public function isAdministrator(): bool
     {
-        return $this->role === 'administrator';
+        return $this->role === self::ROLE_ADMINISTRATOR;
     }
 
     public function isKasir(): bool
     {
-        return $this->role === 'kasir';
+        return $this->role === self::ROLE_KASIR;
+    }
+
+    public function isAktif(): bool
+    {
+        return $this->status === self::STATUS_AKTIF;
+    }
+
+    /**
+     * Label role untuk tampilan (header, tabel pengguna).
+     */
+    public function labelRole(): string
+    {
+        return $this->isAdministrator() ? 'Administrator' : 'Kasir';
     }
 
     public function barangMasuk(): HasMany
