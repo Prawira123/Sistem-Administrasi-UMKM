@@ -12,6 +12,8 @@ use App\Models\User;
  */
 class DashboardService
 {
+    public function __construct(private readonly LaporanService $laporan) {}
+
     public function ringkasan(User $user): array
     {
         $data = [
@@ -27,9 +29,32 @@ class DashboardService
         if ($user->isAdministrator()) {
             $data['penjualanHariIni'] = $this->penjualanHariIni();
             $data['saldoKas'] = $this->saldoKas();
+            $data['labaBulanIni'] = $this->labaBulanIni();
+            $data['terlaris'] = $this->laporan->barangTerlaris(today()->subDays(29), now(), 5);
+            $data['grafik'] = [
+                '7' => $this->laporan->grafikPenjualan(7),
+                '30' => $this->laporan->grafikPenjualan(30),
+            ];
         }
 
         return $data;
+    }
+
+    /**
+     * Laba bulan berjalan untuk kartu dashboard: laba bersih resmi (hpp_periode) bila HPP sudah dihitung,
+     * selain itu estimasi dari HPP rata-rata yang tersimpan di penjualan.
+     *
+     * @return array{nilai: string, estimasi: bool}
+     */
+    public function labaBulanIni(): array
+    {
+        $resmi = $this->laporan->labaRugi(now()->year, now()->month);
+
+        if ($resmi['hpp_dihitung']) {
+            return ['nilai' => $resmi['laba_bersih'], 'estimasi' => false];
+        }
+
+        return ['nilai' => $this->laporan->estimasiLabaBulan(now()->year, now()->month)['laba_bersih'], 'estimasi' => true];
     }
 
     /**

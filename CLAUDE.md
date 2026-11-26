@@ -102,6 +102,54 @@ Aplikasi web untuk toko retail UMKM di Sekretariat DPRD Kabupaten Badung. Modul:
 - **Pembatalan hanya untuk transaksi dengan `tanggal_penjualan` di bulan berjalan**, karena laporan dan HPP periode sebelumnya sudah berjalan. Dicek di `PenjualanService::batalkan()` (pesan `PenjualanService::PESAN_BULAN_LALU`); tombol batal disembunyikan lewat `Penjualan::bisaDibatalkan()` (`isBulanBerjalan()` dan status `selesai`). Test memakai `travelTo`.
 - `ContohTransaksiSeeder` juga membuat dua penjualan (tunai dan QRIS) oleh Kasir; Beras dan Pulpen memicu notifikasi stok minimum.
 
+## Catatan repo (modul 6)
+
+- Monitoring (Admin dan Kasir, `MonitoringStokController`): `stok.index` (cek stok barang aktif, filter `q`/`kategori`/`status` aman/menipis/habis lewat scope `Barang::statusStok()`), `stok.peringatan` (`Barang::stokMenipis()`), `stok.kartu` (`/stok/{barang}/kartu`, filter tanggal dan jenis mutasi). Dashboard dan lonceng menautkan ke `stok.peringatan`.
+- `StokOpnameService`: `buatDraft($user, ?$idKategori, ?$keterangan)` (semua barang aktif atau satu kategori; `stok_sistem` = stok saat draft, `stok_fisik` awal = `stok_sistem`), `simpanHitungan($opname, [id_detail_opname => [stok_fisik, keterangan]], $user)`, `ajukan()`, `setujui()` (Admin), `tolak($opname, $catatan, $admin)` (diajukan → draft, catatan disimpan di `stok_opname.keterangan`), `perubahanSejakDraft()` (peringatan untuk Admin), `bolehUbah()`.
+- Draft hanya bisa diubah/diajukan oleh pembuatnya atau Administrator (gate `ubah-opname`); `diajukan` dan `final` terkunci (`ValidationException` kunci `opname`). Persetujuan/penolakan: route di grup admin + gate `setujui-opname`.
+- Route: `stok-opname.*` (resource tanpa destroy, parameter `{opname}`), `stok-opname.ajukan`, `stok-opname.setujui`, `stok-opname.tolak`. Form `stok-opname.update` dengan `ajukan=1` menyimpan lalu langsung mengajukan.
+- Keterangan wajib bila selisih ≠ 0 (dicek di `SimpanHitunganRequest::after()` dan di service); saran: Rusak, Hilang, Kedaluwarsa, Salah catat (`StokOpnameService::KETERANGAN_SELISIH`).
+- **Keputusan stok yang berubah antara draft dan persetujuan (bahan Bab IV):** yang diterapkan saat disetujui adalah **selisih hasil hitung**, bukan angka stok fisik: `stok_baru = stok_saat_ini + selisih`. Contoh: draft stok_sistem 10, fisik 8 (selisih −2), lalu terjual 3 (stok 7) → stok_baru = 5. Alasannya, penjualan/barang masuk setelah barang dihitung sudah tercatat di kartu stok dan tidak boleh hilang. Admin melihat tabel "Stok berubah sejak draft dibuat" sebelum menyetujui. Detail opname tetap menyimpan angka hitungan asli; perubahan dicatat di keterangan kartu stok ("stok berubah X → Y sejak draft; selisih Z diterapkan").
+- **Bila `stok_saat_ini + selisih < 0` untuk salah satu barang, seluruh persetujuan ditolak** (tidak ada barang yang disesuaikan) dengan pesan "Stok {nama} sudah berubah dan hasil penyesuaian menjadi minus. Kembalikan opname ke draft dan hitung ulang." Admin lalu menolak opname (kembali ke draft) agar dihitung ulang.
+- Saat disetujui: barang berselisih dikunci (`lockForUpdate`, urut `id_barang`), kartu stok `penyesuaian` dengan `id_stok_opname` (selisih + → `jumlah_masuk`, − → `jumlah_keluar`), HPP rata-rata tidak berubah, lalu `NotifikasiStokService::periksa()` dan `tutupBilaAman()`.
+
+## Catatan repo (modul 7)
+
+- Controller keuangan di `app/Http/Controllers/Keuangan/` (implements `HasMiddleware`, `can:akses-keuangan`) di dalam grup route `role:administrator`; Form Request di `app/Http/Requests/Keuangan/`; view di `resources/views/keuangan/<fitur>/`.
+- Route: `kategori-pengeluaran.*` (tanpa show), `pengeluaran.*` (tanpa show) + `pengeluaran.bukti`, `kas.index/create/store/destroy` (parameter `{kas}`, form `?kategori=modal|prive`), `validasi-kas.index/create/store/show` (parameter `{validasi}`, create `?tanggal=`), `hpp.index` (`?bulan=YYYY-MM`), `hpp.hitung` (POST, `hitung_ulang=1` untuk konfirmasi).
+- **Semua penulisan kas lewat `KasService`.** Tambahan modul 7: `perbarui($kas, $jumlah, $tanggal, $keterangan)` (pengeluaran diedit), `hapusMilikPengeluaran()`, `hapusManual()` (hanya kategori modal/prive; kas transaksi lain mengikuti transaksinya), `saldoSebelum($waktu)` (saldo awal buku kas/arus kas), konstanta `KATEGORI_MANUAL` (`modal` ⇒ masuk, `prive` ⇒ keluar).
+- `PengeluaranService::simpan/perbarui/hapus`: nomor `OP-YYYYMMDD-01` dari tanggal pengeluaran; kas keluar `operasional` tanggal = tanggal pengeluaran + jam pencatatan. Bukti (jpg/png/pdf ≤ 2 MB) di disk `public` folder `bukti`, ditampilkan lewat route `pengeluaran.bukti` (khusus admin, tidak perlu `storage:link`). File dibuang bila transaksi gagal, file lama dihapus saat diganti/dihapus. Tanggal pengeluaran, modal, dan prive tidak boleh melebihi hari ini (boleh tanggal lampau).
+- `ValidasiKasService::simpan($tanggal, $uangFisik, $catatan, $admin)` dan `totalTunaiSistem($tanggal)`: satu per tanggal (Form Request `unique` + cek di service + UNIQUE DB), tanggal mendatang ditolak, catatan wajib bila selisih ≠ 0; kas `penyesuaian` masuk bila lebih, keluar bila kurang, `jumlah = |selisih|`. Validasi kas tidak bisa diubah/dihapus. Catatan: pembatalan penjualan tunai setelah tanggal itu divalidasi tidak mengubah `total_tunai_sistem` yang sudah tersimpan.
+- `HppService::hitungBulan($tahun, $bulan, $admin, $hitungUlang = false)`: persediaan awal/akhir dari mutasi kartu stok terakhir sebelum tanggal 1 / sampai akhir bulan (`stok_sesudah × hpp_satuan`), pembelian dari `detail_barang_masuk` per `tanggal_masuk`, terjual dari penjualan `selesai`. Barang tanpa persediaan dan tanpa gerakan tidak disimpan. Bulan yang sudah dihitung butuh `hitungUlang` (ValidationException kunci `periode`); bulan mendatang ditolak; bulan berjalan boleh dihitung sementara. Selisih stok opname ikut masuk HPP.
+- Buku kas: default bulan berjalan; saldo berjalan dan saldo akhir hanya tampil tanpa filter kategori/jenis.
+
+## Catatan repo (modul 8)
+
+- **Paket baru:** `barryvdh/laravel-dompdf` ^3.1 (Composer, PDF laporan) dan `chart.js` ^4 (npm, grafik dashboard; diimpor di `resources/js/components/grafik-penjualan.js`, hanya modul bar yang didaftarkan). Tidak ada tabel/kolom baru.
+- `config/toko.php` (`TOKO_NAMA`, `TOKO_ALAMAT` di `.env`, contoh di `.env.example`): identitas toko untuk kop laporan.
+- `config/dompdf.php` dipublikasikan dengan `enable_font_subsetting = true` (PDF ±25–40 KB, bukan ±860 KB). Test PDF memeriksa ukuran < 200 KB.
+- `LaporanService` mengembalikan array biasa (uang string 2 desimal) untuk web, PDF, dashboard, dan AI (modul 9): `pergerakanStok($dari, $sampai, ?$idBarang)` (stok awal = `stok_sesudah` mutasi terakhir sebelum periode; "semua barang" melewati barang tanpa stok dan tanpa mutasi), `arusKas($dari, $sampai, $rincian)`, `labaRugi($tahun, $bulan)`, `penjualan($dari, $sampai)`, `barangTerlaris($dari, $sampai, ?$batas)`, `stokMinimum()`, `grafikPenjualan($hari)`.
+- **Laba rugi:** HPP hanya dari `hpp_periode` bulan itu. Bila belum dihitung, `hpp`/`laba_kotor`/`laba_bersih` = `null` dan `hpp_dihitung = false` (view menampilkan peringatan + tautan `hpp.index`; tidak ada angka pengganti). `hpp_usang = true` bila ada kartu stok bulan itu yang dibuat setelah HPP dihitung (saran hitung ulang). Pembelian barang dan prive hanya ditampilkan sebagai catatan, bukan beban. Beban dikelompokkan per `kategori_pengeluaran` menurut `tanggal_pengeluaran`.
+- `LaporanController` (`can:akses-laporan`, grup admin): route `laporan.index`, `laporan.pergerakan-stok` (`?dari&sampai&barang`), `laporan.arus-kas` (`?dari&sampai&rincian=1`), `laporan.laba-rugi` (`?bulan=YYYY-MM`), `laporan.penjualan`, `laporan.stok-minimum`. Default periode: awal bulan berjalan s.d. hari ini. **Unduh PDF: tambahkan `?unduh=pdf`** ke URL yang sama.
+- View web `resources/views/laporan/*.blade.php` (Tailwind; `_kop` berisi tombol Cetak/Unduh `print:hidden` dan kop toko). View PDF `resources/views/laporan/pdf/*.blade.php` meng-`@extends('laporan.pdf._layout')` dengan CSS biasa di `<style>` (font DejaVu Sans). Layout app memakai `print:hidden` pada sidebar dan header agar halaman bisa dicetak langsung.
+- **Kartu "Laba bulan ini" di dashboard** (`DashboardService::labaBulanIni()`): bila HPP periodik bulan berjalan sudah dihitung → laba bersih resmi dari `labaRugi()` (label "Laba bersih (HPP periodik)"); bila belum → `LaporanService::estimasiLabaBulan()` = Σ `penjualan.total_harga` − Σ `penjualan.total_hpp` (status selesai) − beban operasional, label "Estimasi (HPP rata-rata)" + tautan `hpp.index`. Estimasi tidak memuat selisih stok opname. **Estimasi hanya untuk dashboard; laporan laba rugi resmi tetap hanya memakai `hpp_periode`.**
+- Dashboard admin (`DashboardService` memakai `LaporanService`): kartu penjualan hari ini, laba bulan ini, saldo kas, barang aktif, stok menipis; grafik penjualan 7/30 hari (`Alpine.data('grafikPenjualan')`, data lewat `@js`); 5 barang terlaris 30 hari.
+
+## Catatan repo (modul 9)
+
+- **Paket baru:** `@tailwindcss/typography` (npm dev, `@plugin` di `resources/css/app.css`) untuk class `prose` pada jawaban AI. `.env.example` berisi `GEMINI_API_KEY=` (kosong), `GEMINI_MODEL`, `GEMINI_TIMEOUT`. Tidak ada tabel/kolom baru (`riwayat_ai` dari modul 1).
+- `AiAssistantService`:
+  - `klasifikasi()`: **berbasis kata kunci** (`KATA_KUNCI`), dihitung per kelompok; stok/keuangan bila satu kelompok lebih banyak, `umum` bila seimbang atau tidak ada (konteks berisi stok dan keuangan).
+  - `kumpulkanKonteks($topik)` lewat `LaporanService`: stok (jumlah aktif/menipis/habis, maks 20 barang menipis; 10 untuk `umum`), keuangan (saldo kas, penjualan bulan ini dan lalu, laba rugi bulan ini dan lalu termasuk estimasi berlabel bila HPP periodik belum dihitung, maks 10 beban per kategori), 10 barang terlaris 30 hari. Nilai uang string desimal Rupiah. **Tanpa data pengguna** (nama, username, email, password). Sekitar 2 KB JSON pada data seeder.
+  - `tanya($pertanyaan, $admin)`: `bodyRequest()` (systemInstruction `INSTRUKSI_SISTEM`, konteks JSON dalam blok ```json + pertanyaan, temperature 0.2), API key lewat header `x-goog-api-key` (tidak di URL/body/browser). Selalu menyimpan `riwayat_ai`.
+  - **Gagal:** key kosong, HTTP error, respons tanpa teks (`GeminiException`), dan timeout/koneksi (`ConnectionException`) disimpan dengan `status = gagal` dan `pesan_error` (≤ 250 karakter, key disensor). Pengguna melihat `PESAN_GAGAL` "AI Assistant sedang tidak dapat dihubungi. Coba lagi nanti."
+- `AiAssistantController` (`can:akses-ai`, grup admin):
+  - Route: `ai.index` (chat, 10 tanya-jawab terakhir milik admin), `ai.tanya` (POST, `throttle:ai-assistant`), `ai.riwayat` (semua admin, cari dan filter status, paginasi), `ai.show` (`{riwayat}`, konteks JSON sebagai bukti pengujian).
+  - Rate limiter `ai-assistant` di `AppServiceProvider`: 10 per menit per `id_user`; bila lewat batas, redirect balik dengan flash error (bukan halaman 429).
+  - `TanyaAiRequest`: wajib, maks 500 karakter (`AiAssistantService::MAKS_PERTANYAAN`).
+- **Chat:** form POST biasa. Alpine (inline di `ai/index`) hanya menampilkan gelembung pertanyaan dan indikator "Sedang menjawab..." lalu submit; textarea memakai `readonly` (bukan `disabled`) agar ikut terkirim. Jawaban dirender lewat `RiwayatAi::jawabanHtml()` (`Str::markdown`, `html_input => strip`, `allow_unsafe_links => false`). `store()` menaikkan `set_time_limit` ke timeout Gemini + 30 detik.
+- Test memakai `Http::fake()` + `Http::preventStrayRequests()` dan config gemini palsu; isi JSON `riwayat_ai.konteks_data` dibandingkan dengan `assertEquals`, karena MySQL mengubah urutan key JSON.
+
 ## Status modul
 
 - [x] Modul 1: migration, model, relasi, seeder 18 tabel
@@ -109,7 +157,7 @@ Aplikasi web untuk toko retail UMKM di Sekretariat DPRD Kabupaten Badung. Modul:
 - [x] Modul 3: master data (kategori barang, supplier, barang, pengguna)
 - [x] Modul 4: barang masuk (HPP rata-rata, kartu stok, kas)
 - [x] Modul 5: penjualan, pembatalan, notifikasi stok minimum
-- [ ] Modul 6: monitoring stok dan stok opname
-- [ ] Modul 7: keuangan (pengeluaran, modal/prive, validasi kas, HPP periodik)
-- [ ] Modul 8: laporan
-- [ ] Modul 9: AI Assistant (Gemini)
+- [x] Modul 6: monitoring stok dan stok opname
+- [x] Modul 7: keuangan (pengeluaran, modal/prive, validasi kas, HPP periodik)
+- [x] Modul 8: laporan
+- [x] Modul 9: AI Assistant (Gemini)

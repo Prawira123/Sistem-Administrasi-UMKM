@@ -82,6 +82,19 @@ class Barang extends Model
     }
 
     /**
+     * Filter status stok, sama dengan statusStok(): habis (stok <= 0), menipis (0 < stok <= minimum), aman (stok > minimum).
+     */
+    public function scopeStatusStok(Builder $query, string $status): Builder
+    {
+        return match ($status) {
+            'habis' => $query->where('stok', '<=', 0),
+            'menipis' => $query->where('stok', '>', 0)->whereColumn('stok', '<=', 'stok_minimum'),
+            'aman' => $query->where('stok', '>', 0)->whereColumn('stok', '>', 'stok_minimum'),
+            default => $query,
+        };
+    }
+
+    /**
      * Peringatan stok minimum (rancangan bagian 4): barang aktif dengan stok <= stok_minimum.
      */
     public function scopeStokMenipis(Builder $query): Builder

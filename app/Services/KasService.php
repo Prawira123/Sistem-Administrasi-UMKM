@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Kas;
+use App\Models\PengeluaranOperasional;
 use App\Models\Penjualan;
 use App\Models\User;
 use App\Support\Uang;
@@ -65,6 +66,59 @@ class KasService
             'keterangan' => $keterangan !== null ? mb_substr($keterangan, 0, 255) : null,
             'id_user' => $user->id_user,
         ]);
+    }
+
+    /** Kategori yang dicatat manual oleh Administrator dari buku kas (modul 7). */
+    public const KATEGORI_MANUAL = ['modal' => self::MASUK, 'prive' => self::KELUAR];
+
+    /**
+     * Ubah nominal/tanggal/keterangan baris kas yang sudah ada (mis. pengeluaran operasional diedit).
+     * Jenis, kategori, dan referensi tidak berubah; aturan validasi yang sama tetap dijalankan.
+     */
+    public function perbarui(Kas $kas, string $jumlah, ?CarbonInterface $tanggal = null, ?string $keterangan = null): Kas
+    {
+        $referensi = $kas->only(self::KOLOM_REFERENSI);
+        $this->validasi($kas->jenis, $kas->kategori, $jumlah, array_filter($referensi, fn ($id) => $id !== null));
+
+        $kas->jumlah = Uang::normal($jumlah);
+        if ($tanggal) {
+            $kas->tanggal = $tanggal;
+        }
+        if ($keterangan !== null) {
+            $kas->keterangan = mb_substr($keterangan, 0, 255);
+        }
+        $kas->save();
+
+        return $kas;
+    }
+
+    /** Pengeluaran operasional dihapus: baris kasnya ikut dihapus (eksplisit, selain CASCADE di database). */
+    public function hapusMilikPengeluaran(PengeluaranOperasional $pengeluaran): int
+    {
+        return Kas::where('id_pengeluaran', $pengeluaran->id_pengeluaran)
+            ->where('kategori', 'operasional')
+            ->delete();
+    }
+
+    /** Hanya baris modal/prive (input manual) yang boleh dihapus dari buku kas. */
+    public function hapusManual(Kas $kas): void
+    {
+        if (! array_key_exists($kas->kategori, self::KATEGORI_MANUAL)) {
+            throw new InvalidArgumentException('Hanya kas modal atau prive yang bisa dihapus dari buku kas; kas lain mengikuti transaksinya.');
+        }
+
+        $kas->delete();
+    }
+
+    /** Saldo kas sebelum waktu tertentu: Σ masuk − Σ keluar (saldo awal buku kas dan laporan arus kas). */
+    public function saldoSebelum(CarbonInterface $waktu): string
+    {
+        $baris = Kas::where('tanggal', '<', $waktu)
+            ->selectRaw("COALESCE(SUM(CASE WHEN jenis = 'masuk' THEN jumlah ELSE 0 END), 0) AS masuk")
+            ->selectRaw("COALESCE(SUM(CASE WHEN jenis = 'keluar' THEN jumlah ELSE 0 END), 0) AS keluar")
+            ->first();
+
+        return Uang::kurang(Uang::normal($baris->masuk), Uang::normal($baris->keluar));
     }
 
     /**

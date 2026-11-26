@@ -56,8 +56,9 @@
             </ul>
         @endif
 
-        <div class="border-t border-gray-100 px-4 py-2 text-xs text-gray-500">
-            Notifikasi selesai otomatis setelah stok diisi ulang lewat Barang Masuk.
+        <div class="flex items-center justify-between gap-2 border-t border-gray-100 px-4 py-2 text-xs text-gray-500">
+            <span>Selesai otomatis setelah stok diisi ulang.</span>
+            <a href="{{ route('stok.peringatan') }}" class="font-medium whitespace-nowrap text-primary-700 hover:underline">Lihat semua</a>
         </div>
     </div>
 </div>

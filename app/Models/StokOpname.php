@@ -30,6 +30,21 @@ class StokOpname extends Model
         ];
     }
 
+    public function isDraft(): bool
+    {
+        return $this->status === 'draft';
+    }
+
+    public function isDiajukan(): bool
+    {
+        return $this->status === 'diajukan';
+    }
+
+    public function isFinal(): bool
+    {
+        return $this->status === 'final';
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'id_user', 'id_user');
