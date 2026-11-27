@@ -10,7 +10,7 @@
                 description="Tidak ada barang aktif dengan stok di bawah atau sama dengan stok minimum." />
         </x-card>
     @else
-        <x-table :headers="['Kode', 'Nama Barang', 'Kategori', 'Stok', 'Stok Min.', 'Perlu Dibeli', 'Status', 'Notifikasi', '']">
+        <x-table :headers="['Kode', 'Nama Barang', 'Kategori', 'Stok', 'Stok Min.', 'Perlu Dibeli', 'Status', 'Notifikasi', '']" :kanan="['Stok', 'Stok Min.', 'Perlu Dibeli']">
             @foreach ($barang as $item)
                 <tr @class(['bg-danger-50/50' => $item->statusStok() === 'habis'])>
                     <td class="font-mono text-xs whitespace-nowrap">{{ $item->kode_barang }}</td>
@@ -31,6 +31,6 @@
                 </tr>
             @endforeach
         </x-table>
-        <p class="mt-3 text-xs text-gray-500">"Perlu Dibeli" = jumlah paling sedikit agar stok kembali di atas stok minimum.</p>
+        <p class="-mt-3 text-xs text-gray-500">"Perlu Dibeli" = jumlah paling sedikit agar stok kembali di atas stok minimum.</p>
     @endif
 </x-layouts::app>

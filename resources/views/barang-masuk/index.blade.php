@@ -3,23 +3,9 @@
         <x-button :href="route('barang-masuk.create')" icon="plus">Catat Barang Masuk</x-button>
     </x-page-header>
 
-    <form method="GET" class="mb-4 flex flex-wrap items-end gap-3">
-        <x-form-field for="dari" label="Dari tanggal">
-            <x-input name="dari" type="date" :value="$filter['dari'] ?? ''" />
-        </x-form-field>
-        <x-form-field for="sampai" label="Sampai tanggal">
-            <x-input name="sampai" type="date" :value="$filter['sampai'] ?? ''" />
-        </x-form-field>
-        <x-form-field for="supplier" label="Supplier">
-            <x-select name="supplier" :options="$daftarSupplier" :selected="$filter['supplier'] ?? ''" placeholder="Semua supplier" />
-        </x-form-field>
-        <div class="flex gap-2">
-            <x-button variant="secondary">Terapkan</x-button>
-            @if (request()->query())
-                <x-button variant="secondary" :href="route('barang-masuk.index')">Reset</x-button>
-            @endif
-        </div>
-    </form>
+    <x-filter-bar :dari="$filter['dari'] ?? ''" :sampai="$filter['sampai'] ?? ''">
+        <x-select name="supplier" :options="$daftarSupplier" :selected="$filter['supplier'] ?? ''" placeholder="Semua supplier" class="w-48" />
+    </x-filter-bar>
 
     @if ($barangMasuk->isEmpty())
         <x-card>
@@ -27,7 +13,7 @@
                 description="{{ request()->query() ? 'Tidak ada transaksi yang cocok dengan filter.' : 'Catat faktur pembelian pertama dari supplier.' }}" />
         </x-card>
     @else
-        <x-table :headers="['Kode', 'Tanggal', 'Supplier', 'No. Faktur', 'Item', 'Total', 'Bayar', 'Dicatat oleh', '']">
+        <x-table :headers="['Kode', 'Tanggal', 'Supplier', 'No. Faktur', 'Item', 'Total', 'Bayar', 'Dicatat oleh', '']" :kanan="['Item', 'Total']">
             @foreach ($barangMasuk as $item)
                 <tr>
                     <td class="font-mono text-xs whitespace-nowrap">{{ $item->kode_barang_masuk }}</td>
@@ -45,6 +31,6 @@
             @endforeach
         </x-table>
 
-        <div class="mt-4">{{ $barangMasuk->links() }}</div>
+        <div>{{ $barangMasuk->links() }}</div>
     @endif
 </x-layouts::app>

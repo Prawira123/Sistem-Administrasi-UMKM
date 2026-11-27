@@ -25,7 +25,7 @@
 
 @foreach ($pesan as [$jenis, $isi])
     <div x-data="{ tampil: true }" x-show="tampil" role="alert"
-        {{ $attributes->merge(['class' => 'mb-4 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm '.$gaya[$jenis][0]]) }}>
+        {{ $attributes->merge(['class' => 'flex items-start gap-3 rounded-lg border px-4 py-3 text-sm '.$gaya[$jenis][0]]) }}>
         <x-icon :name="$gaya[$jenis][1]" class="mt-0.5 size-5" />
         <div class="flex-1">{{ $isi }}</div>
         <button type="button" @click="tampil = false" class="opacity-60 hover:opacity-100" aria-label="Tutup">

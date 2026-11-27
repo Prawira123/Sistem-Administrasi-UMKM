@@ -2,14 +2,12 @@
     <x-page-header title="Perhitungan HPP Periodik"
         subtitle="HPP = Persediaan Awal + Pembelian − Persediaan Akhir, per barang per bulan, dari kartu stok dan barang masuk." />
 
-    <x-card class="mb-6">
-        <div class="flex flex-wrap items-end gap-3">
-            <form method="GET" class="flex flex-wrap items-end gap-3">
-                <x-form-field for="bulan" label="Periode">
-                    <x-input name="bulan" type="month" :max="now()->format('Y-m')" :value="$bulan->format('Y-m')" />
-                </x-form-field>
-                <x-button variant="secondary">Tampilkan</x-button>
-            </form>
+    <x-card>
+        <div class="flex flex-wrap items-center gap-3">
+            <x-filter-bar tombol="Tampilkan" :ikon="null" :reset="false">
+                <label for="bulan" class="text-sm font-medium text-gray-700">Periode</label>
+                <x-input name="bulan" type="month" :max="now()->format('Y-m')" :value="$bulan->format('Y-m')" class="w-48" />
+            </x-filter-bar>
 
             @if ($hasil->isEmpty())
                 <form method="POST" action="{{ route('hpp.hitung') }}">
@@ -45,7 +43,8 @@
         <p class="mb-2 text-sm text-gray-500">
             Dihitung {{ \App\Support\Format::tanggalWaktu($dihitungPada) }} oleh {{ $hasil->first()->user->nama }}.
         </p>
-        <x-table :headers="['Barang', 'Persediaan Awal', 'Pembelian', 'Persediaan Akhir', 'Total HPP', 'Terjual', 'HPP/Unit']">
+        <x-table :headers="['Barang', 'Persediaan Awal', 'Pembelian', 'Persediaan Akhir', 'Total HPP', 'Terjual', 'HPP/Unit']"
+            :kanan="['Persediaan Awal', 'Pembelian', 'Persediaan Akhir', 'Total HPP', 'Terjual', 'HPP/Unit']">
             @foreach ($hasil as $h)
                 <tr>
                     <td>
@@ -76,7 +75,7 @@
                 <td></td>
             </tr>
         </x-table>
-        <p class="mt-3 text-xs text-gray-500">
+        <p class="-mt-3 text-xs text-gray-500">
             Selisih stok opname (rusak, hilang, kedaluwarsa) ikut masuk HPP karena mengurangi persediaan akhir tanpa penjualan.
         </p>
     @endif

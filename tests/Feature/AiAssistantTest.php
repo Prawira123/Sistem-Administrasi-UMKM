@@ -41,6 +41,15 @@ class AiAssistantTest extends TestCase
         $this->kasir = User::factory()->kasir()->create(['nama' => 'Pak Kasir Rahasia', 'username' => 'kasir_rahasia', 'email' => 'kasir.rahasia@contoh.test']);
     }
 
+    protected function tearDown(): void
+    {
+        // AiAssistantController::store() memanggil set_time_limit(timeout + 30). Batas itu berlaku untuk seluruh
+        // proses PHPUnit, sehingga test berikutnya bisa terhenti "Maximum execution time". Kembalikan tanpa batas.
+        set_time_limit(0);
+
+        parent::tearDown();
+    }
+
     private function jawabanGemini(string $teks): array
     {
         return ['candidates' => [['content' => ['role' => 'model', 'parts' => [['text' => $teks]]], 'finishReason' => 'STOP']]];

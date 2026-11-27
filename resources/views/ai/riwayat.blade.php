@@ -3,16 +3,16 @@
         <x-button :href="route('ai.index')" icon="sparkles">Tanya AI</x-button>
     </x-page-header>
 
-    <x-search-bar :value="$cari" placeholder="Cari pertanyaan...">
-        <x-select name="status" :options="['berhasil' => 'Berhasil', 'gagal' => 'Gagal']" :selected="request('status')" placeholder="Semua status" />
-    </x-search-bar>
+    <x-filter-bar :cari="$cari" placeholder="Cari pertanyaan...">
+        <x-select name="status" :options="['berhasil' => 'Berhasil', 'gagal' => 'Gagal']" :selected="request('status')" placeholder="Semua status" class="w-48" />
+    </x-filter-bar>
 
     @if ($riwayat->isEmpty())
         <x-card>
             <x-empty-state icon="sparkles" title="Belum ada riwayat" description="Pertanyaan ke AI Assistant akan tercatat di sini." />
         </x-card>
     @else
-        <x-table :headers="['Waktu', 'Pertanyaan', 'Topik', 'Status', 'Respons', 'Model', 'Oleh', '']">
+        <x-table :headers="['Waktu', 'Pertanyaan', 'Topik', 'Status', 'Respons', 'Model', 'Oleh', '']" :kanan="['Respons']">
             @foreach ($riwayat as $r)
                 <tr>
                     <td class="whitespace-nowrap">{{ \App\Support\Format::tanggalWaktu($r->created_at) }}</td>
@@ -27,6 +27,6 @@
             @endforeach
         </x-table>
 
-        <div class="mt-4">{{ $riwayat->links() }}</div>
+        <div>{{ $riwayat->links() }}</div>
     @endif
 </x-layouts::app>

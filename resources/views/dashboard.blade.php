@@ -95,7 +95,7 @@
             <x-empty-state icon="check-circle" title="Semua stok aman"
                 description="Tidak ada barang aktif dengan stok di bawah atau sama dengan stok minimum." />
         @else
-            <x-table :headers="['Kode', 'Nama Barang', 'Kategori', 'Stok', 'Stok Min.', 'Status']" :polos="true">
+            <x-table :headers="['Kode', 'Nama Barang', 'Kategori', 'Stok', 'Stok Min.', 'Status']" :kanan="['Stok', 'Stok Min.']" :polos="true">
                 @foreach ($barangMenipis as $item)
                     <tr>
                         <td class="font-mono text-xs">{{ $item->kode_barang }}</td>

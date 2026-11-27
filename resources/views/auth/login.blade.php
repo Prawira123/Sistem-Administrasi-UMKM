@@ -8,7 +8,7 @@
     </div>
 
     <x-card>
-        <x-alert />
+        <x-alert class="mb-4" />
 
         <form method="POST" action="{{ route('login.attempt') }}" class="space-y-4">
             @csrf

@@ -60,7 +60,7 @@
             @csrf
 
             @if ($errors->any())
-                <x-alert type="error">
+                <x-alert type="error" class="mb-4">
                     <ul class="list-inside list-disc">
                         @foreach ($errors->all() as $pesan)
                             <li>{{ $pesan }}</li>

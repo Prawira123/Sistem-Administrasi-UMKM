@@ -5,7 +5,8 @@
     <meta charset="utf-8">
     <title>{{ $kop['judul'] }}</title>
     <style>
-        @page { margin: 24px 28px 36px; }
+        /* Margin 15 mm, sama dengan cetak web (layouts/laporan.blade.php). Ukuran A4 + orientasi diatur setPaper(). */
+        @page { margin: 15mm; }
         body { font-family: DejaVu Sans, sans-serif; font-size: 9.5px; color: #1f2937; }
         .kop { text-align: center; border-bottom: 2px solid #111827; padding-bottom: 6px; margin-bottom: 10px; }
         .kop .toko { font-size: 14px; font-weight: bold; text-transform: uppercase; }

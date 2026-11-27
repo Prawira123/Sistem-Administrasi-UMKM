@@ -1,5 +1,10 @@
 {{--
-    Tombol. Varian: primary (default), secondary, danger. Ukuran: md (default), sm (aksi di tabel).
+    Tombol. Varian:
+    - primary (default): teal, untuk aksi utama halaman (Tambah, Simpan, Catat).
+    - secondary: putih bergaris, untuk aksi pendukung (Ubah, Detail, Terapkan, Kembali).
+    - danger-outline: garis merah, untuk tombol hapus di tabel agar tidak dominan.
+    - danger: merah penuh, hanya untuk tombol konfirmasi di modal hapus/batal.
+    Ukuran: md (default, h-10 sejajar input) dan sm (h-8, aksi di tabel).
     Bila diberi atribut href, dirender sebagai <a>.
     Contoh: <x-button>Simpan</x-button>, <x-button variant="secondary" href="{{ route('dashboard') }}">Kembali</x-button>
 --}}
@@ -7,14 +12,15 @@
 
 @php
     $varian = [
-        'primary' => 'bg-primary-600 text-white hover:bg-primary-700 focus-visible:outline-primary-600',
-        'secondary' => 'bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus-visible:outline-gray-400',
-        'danger' => 'bg-danger-600 text-white hover:bg-danger-700 focus-visible:outline-danger-600',
+        'primary' => 'bg-primary-600 text-white shadow-xs hover:bg-primary-700 focus-visible:outline-primary-600',
+        'secondary' => 'bg-white text-gray-700 shadow-xs ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus-visible:outline-primary-600',
+        'danger-outline' => 'bg-white text-danger-600 ring-1 ring-inset ring-danger-600/30 hover:bg-danger-50 focus-visible:outline-danger-600',
+        'danger' => 'bg-danger-600 text-white shadow-xs hover:bg-danger-700 focus-visible:outline-danger-600',
     ][$variant] ?? '';
 
-    $ukuran = $size === 'sm' ? 'px-2.5 py-1.5 text-xs' : 'px-4 py-2 text-sm';
+    $ukuran = $size === 'sm' ? 'h-8 px-3 text-xs' : 'h-10 px-4 text-sm';
 
-    $kelas = 'inline-flex items-center justify-center gap-1.5 rounded-lg font-medium shadow-sm transition '.$ukuran.' '
+    $kelas = 'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg font-medium whitespace-nowrap transition '.$ukuran.' '
         .'focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50 '.$varian;
 @endphp
 

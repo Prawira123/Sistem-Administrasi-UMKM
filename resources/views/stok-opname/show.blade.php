@@ -39,7 +39,7 @@
                 Saat disetujui, yang diterapkan adalah <strong>selisih hasil hitung</strong>:
                 stok baru = stok saat ini + selisih, sehingga transaksi setelah penghitungan tetap terhitung.
             </p>
-            <x-table :headers="['Barang', 'Stok Sistem (draft)', 'Stok Fisik', 'Selisih', 'Stok Saat Ini', 'Stok Setelah Disetujui']" :polos="true">
+            <x-table :headers="['Barang', 'Stok Sistem (draft)', 'Stok Fisik', 'Selisih', 'Stok Saat Ini', 'Stok Setelah Disetujui']" :kanan="['Stok Sistem (draft)', 'Stok Fisik', 'Selisih', 'Stok Saat Ini', 'Stok Setelah Disetujui']" :polos="true">
                 @foreach ($perubahan as $p)
                     <tr @class(['bg-danger-50' => $p['minus']])>
                         <td class="font-medium text-gray-900">{{ $p['detail']->barang->nama_barang }}</td>
@@ -81,7 +81,7 @@
     </x-card>
 
     <x-card title="Hasil Hitung" class="mt-6" :padding="false">
-        <x-table :headers="['Kode', 'Nama Barang', 'Stok Sistem', 'Stok Fisik', 'Selisih', 'Keterangan']" :polos="true">
+        <x-table :headers="['Kode', 'Nama Barang', 'Stok Sistem', 'Stok Fisik', 'Selisih', 'Keterangan']" :kanan="['Stok Sistem', 'Stok Fisik', 'Selisih']" :polos="true">
             @foreach ($opname->detail as $d)
                 <tr @class(['bg-warning-50' => $d->selisih !== 0])>
                     <td class="font-mono text-xs">{{ $d->barang->kode_barang }}</td>

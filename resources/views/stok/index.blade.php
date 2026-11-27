@@ -12,7 +12,7 @@
         ];
     @endphp
 
-    <div class="mb-6 grid gap-4 sm:grid-cols-3">
+    <div class="grid gap-4 sm:grid-cols-3">
         @foreach ($ringkas as $status => [$label, $warna, $ikon])
             <a href="{{ route('stok.index', ['status' => $status]) }}"
                 @class(['block rounded-xl hover:opacity-90', 'ring-2 ring-primary-500' => ($filter['status'] ?? null) === $status])>
@@ -29,18 +29,18 @@
         @endforeach
     </div>
 
-    <x-search-bar :value="$filter['q']" placeholder="Cari kode/barcode atau nama...">
-        <x-select name="kategori" :options="$daftarKategori" :selected="$filter['kategori'] ?? ''" placeholder="Semua kategori" class="w-auto" />
+    <x-filter-bar :cari="$filter['q'] ?? ''" placeholder="Cari kode/barcode atau nama...">
+        <x-select name="kategori" :options="$daftarKategori" :selected="$filter['kategori'] ?? ''" placeholder="Semua kategori" class="w-48" />
         <x-select name="status" :options="['aman' => 'Aman', 'menipis' => 'Menipis', 'habis' => 'Habis']"
-            :selected="$filter['status'] ?? ''" placeholder="Semua status" class="w-auto" />
-    </x-search-bar>
+            :selected="$filter['status'] ?? ''" placeholder="Semua status" class="w-48" />
+    </x-filter-bar>
 
     @if ($barang->isEmpty())
         <x-card>
             <x-empty-state title="Barang tidak ditemukan" description="Tidak ada barang aktif yang cocok dengan pencarian/filter." />
         </x-card>
     @else
-        <x-table :headers="['Kode', 'Nama Barang', 'Kategori', 'Stok', 'Stok Min.', 'Status', '']">
+        <x-table :headers="['Kode', 'Nama Barang', 'Kategori', 'Stok', 'Stok Min.', 'Status', '']" :kanan="['Stok', 'Stok Min.']">
             @foreach ($barang as $item)
                 <tr>
                     <td class="font-mono text-xs whitespace-nowrap">{{ $item->kode_barang }}</td>
@@ -54,6 +54,6 @@
             @endforeach
         </x-table>
 
-        <div class="mt-4">{{ $barang->links() }}</div>
+        <div>{{ $barang->links() }}</div>
     @endif
 </x-layouts::app>

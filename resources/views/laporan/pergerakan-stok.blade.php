@@ -1,26 +1,16 @@
-<x-layouts::app title="Laporan Pergerakan Stok">
-    @include('laporan._kop')
+<x-layouts::laporan title="Laporan Pergerakan Stok" :kop="$kop">
 
-    <form method="GET" class="mb-6 flex flex-wrap items-end gap-3 print:hidden">
-        <x-form-field for="dari" label="Dari tanggal">
-            <x-input name="dari" type="date" :value="$dari->toDateString()" />
-        </x-form-field>
-        <x-form-field for="sampai" label="Sampai tanggal">
-            <x-input name="sampai" type="date" :value="$sampai->toDateString()" />
-        </x-form-field>
-        <x-form-field for="barang" label="Barang">
-            <x-select name="barang" :options="$daftarBarang" :selected="$idBarang" placeholder="Semua barang" />
-        </x-form-field>
-        <x-button variant="secondary">Tampilkan</x-button>
-    </form>
+    <x-filter-bar :dari="$dari->toDateString()" :sampai="$sampai->toDateString()" tombol="Tampilkan" :reset="false">
+        <x-select name="barang" :options="$daftarBarang" :selected="$idBarang" placeholder="Semua barang" class="w-48" />
+    </x-filter-bar>
 
     @forelse ($bagian as $b)
-        <x-card class="mb-6 break-inside-avoid" :padding="false">
+        <x-card class="break-inside-avoid" :padding="false">
             <x-slot:title>
                 {{ $b['barang']->nama_barang }}
                 <span class="font-mono text-xs font-normal text-gray-500">{{ $b['barang']->kode_barang }} · {{ $b['barang']->satuan }}</span>
             </x-slot:title>
-            <x-table :headers="['Tanggal', 'Jenis', 'Sumber', 'Keterangan', 'Masuk', 'Keluar', 'Saldo', 'HPP Satuan']" :polos="true">
+            <x-table :headers="['Tanggal', 'Jenis', 'Sumber', 'Keterangan', 'Masuk', 'Keluar', 'Saldo', 'HPP Satuan']" :kanan="['Masuk', 'Keluar', 'Saldo', 'HPP Satuan']" :polos="true">
                 <tr class="bg-gray-50 italic">
                     <td colspan="6">Stok awal periode</td>
                     <td class="text-right font-medium">{{ $b['stok_awal'] }}</td>
@@ -38,7 +28,7 @@
                         <td class="text-right whitespace-nowrap">@rupiah($m['hpp_satuan'])</td>
                     </tr>
                 @endforeach
-                <tr class="bg-gray-50 font-semibold text-gray-900">
+                <tr class="baris-total bg-gray-50 font-semibold text-gray-900">
                     <td colspan="4">Total / stok akhir periode</td>
                     <td class="text-right">{{ $b['total_masuk'] }}</td>
                     <td class="text-right">{{ $b['total_keluar'] }}</td>
@@ -52,4 +42,4 @@
             <x-empty-state icon="clipboard-check" title="Tidak ada pergerakan stok" description="Tidak ada mutasi stok pada periode ini." />
         </x-card>
     @endforelse
-</x-layouts::app>
+</x-layouts::laporan>

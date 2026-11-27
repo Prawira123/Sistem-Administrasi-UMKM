@@ -3,10 +3,10 @@
         <x-button :href="route('barang.create')" icon="plus">Tambah Barang</x-button>
     </x-page-header>
 
-    <x-search-bar :value="$cari" placeholder="Cari kode/barcode atau nama...">
-        <x-select name="kategori" :options="$daftarKategori" :selected="$idKategori" placeholder="Semua kategori" class="w-auto" />
-        <x-select name="stok" :options="['menipis' => 'Stok menipis saja']" :selected="$filterStok" placeholder="Semua stok" class="w-auto" />
-    </x-search-bar>
+    <x-filter-bar :cari="$cari" placeholder="Cari kode/barcode atau nama...">
+        <x-select name="kategori" :options="$daftarKategori" :selected="$idKategori" placeholder="Semua kategori" class="w-48" />
+        <x-select name="stok" :options="['menipis' => 'Stok menipis saja']" :selected="$filterStok" placeholder="Semua stok" class="w-48" />
+    </x-filter-bar>
 
     @if ($barang->isEmpty())
         <x-card>
@@ -16,7 +16,8 @@
     @else
         {{-- Kolom HPP hanya untuk pemegang akses keuangan (Administrator). --}}
         @php($lihatHpp = auth()->user()->can('akses-keuangan'))
-        <x-table :headers="array_values(array_filter(['Kode', 'Nama Barang', 'Kategori', 'Stok', 'Stok Min.', $lihatHpp ? 'HPP Rata-rata' : null, 'Harga Jual', 'Status', 'Aksi']))">
+        <x-table :headers="array_values(array_filter(['Kode', 'Nama Barang', 'Kategori', 'Stok', 'Stok Min.', $lihatHpp ? 'HPP Rata-rata' : null, 'Harga Jual', 'Status', 'Aksi']))"
+            :kanan="['Stok', 'Stok Min.', 'HPP Rata-rata', 'Harga Jual']">
             @foreach ($barang as $item)
                 <tr>
                     <td class="font-mono text-xs whitespace-nowrap">{{ $item->kode_barang }}</td>
@@ -25,19 +26,20 @@
                         <p class="text-xs text-gray-500">per {{ $item->satuan }}</p>
                     </td>
                     <td>{{ $item->kategori->nama_kategori }}</td>
+                    {{-- Badge di bawah angka agar lebar kolom tidak bergeser. --}}
                     <td class="text-right whitespace-nowrap">
-                        <span class="font-semibold">{{ $item->stok }}</span>
+                        <span class="font-semibold text-gray-900 tabular-nums">{{ $item->stok }}</span>
                         @if ($item->statusStok() === 'habis')
-                            <x-badge status="habis" class="ml-1">Stok habis</x-badge>
+                            <div class="mt-1"><x-badge status="habis">Stok habis</x-badge></div>
                         @elseif ($item->statusStok() === 'menipis')
-                            <x-badge status="menipis" class="ml-1">Stok menipis</x-badge>
+                            <div class="mt-1"><x-badge status="menipis">Stok menipis</x-badge></div>
                         @endif
                     </td>
-                    <td class="text-right">{{ $item->stok_minimum }}</td>
+                    <td class="text-right tabular-nums">{{ $item->stok_minimum }}</td>
                     @can('akses-keuangan')
-                        <td class="text-right whitespace-nowrap">@rupiah($item->hpp_rata_rata)</td>
+                        <td class="text-right whitespace-nowrap tabular-nums">@rupiah($item->hpp_rata_rata)</td>
                     @endcan
-                    <td class="text-right whitespace-nowrap">
+                    <td class="text-right whitespace-nowrap tabular-nums">
                         @if ((float) $item->harga_jual > 0)
                             @rupiah($item->harga_jual)
                         @else
@@ -49,19 +51,19 @@
                         @endif
                     </td>
                     <td><x-badge :status="$item->status" /></td>
-                    <td class="whitespace-nowrap">
-                        <div class="flex gap-2">
+                    <td>
+                        <x-table.aksi>
                             <x-button variant="secondary" size="sm" icon="pencil" :href="route('barang.edit', $item)">Ubah</x-button>
                             @can('hapus-barang')
                                 <x-delete-button :action="route('barang.destroy', $item)" :id="'barang-'.$item->id_barang"
                                     :nama="$item->nama_barang" />
                             @endcan
-                        </div>
+                        </x-table.aksi>
                     </td>
                 </tr>
             @endforeach
         </x-table>
 
-        <div class="mt-4">{{ $barang->links() }}</div>
+        <div>{{ $barang->links() }}</div>
     @endif
 </x-layouts::app>

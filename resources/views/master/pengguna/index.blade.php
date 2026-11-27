@@ -3,7 +3,7 @@
         <x-button :href="route('pengguna.create')" icon="plus">Tambah Pengguna</x-button>
     </x-page-header>
 
-    <x-search-bar :value="$cari" placeholder="Cari nama atau username..." />
+    <x-filter-bar :cari="$cari" placeholder="Cari nama atau username..." />
 
     @if ($pengguna->isEmpty())
         <x-card>
@@ -25,19 +25,19 @@
                     <td><x-badge :status="$item->role">{{ $item->labelRole() }}</x-badge></td>
                     <td><x-badge :status="$item->status" /></td>
                     <td class="whitespace-nowrap">{{ \App\Support\Format::tanggalWaktu($item->terakhir_login) }}</td>
-                    <td class="whitespace-nowrap">
-                        <div class="flex gap-2">
+                    <td>
+                        <x-table.aksi>
                             <x-button variant="secondary" size="sm" icon="pencil" :href="route('pengguna.edit', $item)">Ubah</x-button>
                             @unless ($item->is(auth()->user()))
                                 <x-delete-button :action="route('pengguna.destroy', $item)" :id="'pengguna-'.$item->id_user"
                                     :nama="$item->nama" />
                             @endunless
-                        </div>
+                        </x-table.aksi>
                     </td>
                 </tr>
             @endforeach
         </x-table>
 
-        <div class="mt-4">{{ $pengguna->links() }}</div>
+        <div>{{ $pengguna->links() }}</div>
     @endif
 </x-layouts::app>

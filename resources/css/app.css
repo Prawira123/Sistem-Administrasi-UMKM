@@ -42,6 +42,40 @@
     --color-danger-700: oklch(0.505 0.213 27.518);
 }
 
+/*
+ * Scrollbar tipis senada sidebar (bg-primary-900): hanya muncul bila menu lebih tinggi dari layar,
+ * tanpa track putih bawaan browser.
+ */
+@utility scrollbar-sidebar {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent; /* thumb baru terlihat saat kursor di atas menu */
+
+    &:hover {
+        scrollbar-color: --alpha(var(--color-white) / 25%) transparent;
+    }
+
+    &::-webkit-scrollbar {
+        width: 6px;
+    }
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+        border-radius: 9999px;
+        background-color: --alpha(var(--color-white) / 20%);
+    }
+    &::-webkit-scrollbar-thumb:hover {
+        background-color: --alpha(var(--color-white) / 35%);
+    }
+}
+
+/* Ikon kalender input tanggal/bulan diberi warna abu-abu senada ikon chevron select. */
+input[type='date']::-webkit-calendar-picker-indicator,
+input[type='month']::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.5;
+}
+
 /* Elemen Alpine (x-cloak) disembunyikan sampai Alpine siap. */
 [x-cloak] {
     display: none !important;

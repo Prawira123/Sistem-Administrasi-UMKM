@@ -4,24 +4,10 @@
         <x-button variant="secondary" :href="route('stok.index')">Kembali</x-button>
     </x-page-header>
 
-    <form method="GET" class="mb-4 flex flex-wrap items-end gap-3">
-        <x-form-field for="dari" label="Dari tanggal">
-            <x-input name="dari" type="date" :value="$filter['dari'] ?? ''" />
-        </x-form-field>
-        <x-form-field for="sampai" label="Sampai tanggal">
-            <x-input name="sampai" type="date" :value="$filter['sampai'] ?? ''" />
-        </x-form-field>
-        <x-form-field for="jenis" label="Jenis mutasi">
-            <x-select name="jenis" :options="['masuk' => 'Masuk', 'keluar' => 'Keluar', 'penyesuaian' => 'Penyesuaian']"
-                :selected="$filter['jenis'] ?? ''" placeholder="Semua jenis" />
-        </x-form-field>
-        <div class="flex gap-2">
-            <x-button variant="secondary">Terapkan</x-button>
-            @if (request()->query())
-                <x-button variant="secondary" :href="route('stok.kartu', $barang)">Reset</x-button>
-            @endif
-        </div>
-    </form>
+    <x-filter-bar :dari="$filter['dari'] ?? ''" :sampai="$filter['sampai'] ?? ''">
+        <x-select name="jenis" :options="['masuk' => 'Masuk', 'keluar' => 'Keluar', 'penyesuaian' => 'Penyesuaian']"
+            :selected="$filter['jenis'] ?? ''" placeholder="Semua jenis mutasi" class="w-48" />
+    </x-filter-bar>
 
     @if ($mutasi->isEmpty())
         <x-card>
@@ -30,7 +16,8 @@
     @else
         {{-- Kolom HPP hanya untuk pemegang akses keuangan (Administrator). --}}
         @php($lihatHpp = auth()->user()->can('akses-keuangan'))
-        <x-table :headers="array_values(array_filter(['Waktu', 'Jenis', 'Sumber', 'Masuk', 'Keluar', 'Stok Sebelum', 'Stok Sesudah', $lihatHpp ? 'HPP/Unit' : null, 'Keterangan', 'Oleh']))">
+        <x-table :headers="array_values(array_filter(['Waktu', 'Jenis', 'Sumber', 'Masuk', 'Keluar', 'Stok Sebelum', 'Stok Sesudah', $lihatHpp ? 'HPP/Unit' : null, 'Keterangan', 'Oleh']))"
+            :kanan="['Masuk', 'Keluar', 'Stok Sebelum', 'Stok Sesudah', 'HPP/Unit']">
             @foreach ($mutasi as $m)
                 <tr>
                     <td class="whitespace-nowrap">{{ \App\Support\Format::tanggalWaktu($m->tanggal) }}</td>
@@ -61,6 +48,6 @@
             @endforeach
         </x-table>
 
-        <div class="mt-4">{{ $mutasi->links() }}</div>
+        <div>{{ $mutasi->links() }}</div>
     @endif
 </x-layouts::app>

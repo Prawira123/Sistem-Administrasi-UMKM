@@ -1,12 +1,11 @@
-<x-layouts::app title="Laporan Stok Minimum">
-    @include('laporan._kop')
+<x-layouts::laporan title="Laporan Stok Minimum" :kop="$kop">
 
     @if ($barang->isEmpty())
         <x-card>
             <x-empty-state icon="check-circle" title="Semua stok aman" description="Tidak ada barang aktif dengan stok di bawah atau sama dengan stok minimum." />
         </x-card>
     @else
-        <x-table :headers="['No', 'Kode', 'Nama Barang', 'Kategori', 'Stok', 'Stok Minimum', 'Kekurangan', 'Status']">
+        <x-table :headers="['No', 'Kode', 'Nama Barang', 'Kategori', 'Stok', 'Stok Minimum', 'Kekurangan', 'Status']" :kanan="['Stok', 'Stok Minimum', 'Kekurangan']">
             @foreach ($barang as $i => $b)
                 <tr>
                     <td>{{ $i + 1 }}</td>
@@ -20,6 +19,6 @@
                 </tr>
             @endforeach
         </x-table>
-        <p class="mt-3 text-xs text-gray-500">Kekurangan = stok minimum − stok saat ini. Barang tampil bila stok ≤ stok minimum dan berstatus aktif.</p>
+        <p class="-mt-3 text-xs text-gray-500">Kekurangan = stok minimum − stok saat ini. Barang tampil bila stok ≤ stok minimum dan berstatus aktif.</p>
     @endif
-</x-layouts::app>
+</x-layouts::laporan>

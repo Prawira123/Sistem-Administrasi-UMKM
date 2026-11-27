@@ -27,7 +27,7 @@
         @method('PUT')
 
         <x-card :padding="false">
-            <x-table :headers="['Kode', 'Nama Barang', 'Stok Sistem', 'Stok Fisik', 'Selisih', 'Keterangan Selisih']" :polos="true">
+            <x-table :headers="['Kode', 'Nama Barang', 'Stok Sistem', 'Stok Fisik', 'Selisih', 'Keterangan Selisih']" :kanan="['Stok Sistem', 'Selisih']" :polos="true">
                 @foreach ($opname->detail as $d)
                     @php
                         $fisik = old("detail.{$d->id_detail_opname}.stok_fisik", $d->stok_fisik);

@@ -53,7 +53,7 @@
     </x-card>
 
     <x-card title="Rincian Barang" class="mt-6" :padding="false">
-        <x-table :headers="['Kode', 'Nama Barang', 'Jumlah', 'Harga Beli', 'Subtotal', 'Kedaluwarsa']" :polos="true">
+        <x-table :headers="['Kode', 'Nama Barang', 'Jumlah', 'Harga Beli', 'Subtotal', 'Kedaluwarsa']" :kanan="['Jumlah', 'Harga Beli', 'Subtotal']" :polos="true">
             @foreach ($barangMasuk->detail as $detail)
                 <tr>
                     <td class="font-mono text-xs">{{ $detail->barang->kode_barang }}</td>

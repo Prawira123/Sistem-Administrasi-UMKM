@@ -76,7 +76,14 @@ Aplikasi web untuk toko retail UMKM di Sekretariat DPRD Kabupaten Badung. Modul:
 - Kode otomatis lewat `App\Services\NomorOtomatisService` (lihat catatan modul 4); `supplier()` → SUP-001, `barang()` → BRG-0001.
 - Hapus data yang masih dirujuk FK RESTRICT: pakai `$this->hapusAtauTolak($model, $routeIndex, $pesanSukses)` dari base `Controller` (menangkap `QueryException` SQLSTATE 23000).
 - Controller master di `app/Http/Controllers/Master/`, Form Request di `app/Http/Requests/Master/`, view di `resources/views/master/<entitas>/` (`index`, `create`, `edit`, `_form`). Route `barang.*` untuk kedua role kecuali `barang.destroy` (admin); `kategori-barang.*`, `supplier.*`, `pengguna.*` (parameter `{user}`) khusus admin.
-- Komponen tambahan: `x-form-field` (label + input + error + bantuan), `x-search-bar` (form GET `q` + slot filter), `x-delete-button` (tombol + modal hapus), `x-button size="sm"`, `x-table :polos="true"` (di dalam x-card).
+- Komponen tambahan: `x-form-field` (label + input + error + bantuan), `x-delete-button` (tombol outline merah + modal hapus), `x-button size="sm"`, `x-table :polos="true"` (di dalam x-card).
+- **Standar UI (dipakai semua halaman):**
+  - `<main>` di layout memakai `p-6 lg:p-8 space-y-6`; blok halaman tidak perlu `mb-*`/`mt-*` (class margin sendiri tetap menang atas `space-y`). `x-page-header`: judul + tombol sejajar (`justify-between items-start`).
+  - Filter daftar: `<x-filter-bar :cari="$cari" :dari=".." :sampai=".." tombol=".." :reset="false" :action="..">` + slot (select `class="w-48"`, input `w-44`). Satu baris `flex-wrap`, semua `h-10`, `print:hidden`. `:cari` null = tanpa kotak cari; `dari`/`sampai` diisi = rentang tanggal.
+  - `x-input`/`x-select`/`x-textarea`: `h-10 px-3 rounded-lg border-gray-300 text-sm`, fokus ring teal; select `appearance-none` + ikon chevron. Class `w-*` mengganti lebar default `w-full`.
+  - `x-table :kanan="['Stok', 'Total']"` = judul kolom angka rata kanan (td-nya tetap `text-right`, otomatis `tabular-nums`). Tombol aksi dibungkus `<x-table.aksi>`. Badge stok ditaruh di bawah angka (`<div class="mt-1"><x-badge/></div>`).
+  - Warna tombol: `primary` (teal) untuk aksi utama, `secondary` untuk pendukung, `danger-outline` untuk hapus/batalkan di halaman, `danger` penuh hanya untuk konfirmasi di modal. Badge memakai `bg-*-50 text-*-700`.
+  - Sidebar: `nav` memakai utility `scrollbar-sidebar` (app.css; scrollbar tipis, terlihat saat hover).
 - Dashboard memakai `App\Services\DashboardService` (barang aktif, stok menipis; admin: penjualan hari ini dan saldo kas dari tabel `penjualan`/`kas`).
 
 ## Catatan repo (modul 4)

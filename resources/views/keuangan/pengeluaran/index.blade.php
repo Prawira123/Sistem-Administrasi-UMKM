@@ -4,23 +4,9 @@
         <x-button :href="route('pengeluaran.create')" icon="plus">Catat Pengeluaran</x-button>
     </x-page-header>
 
-    <form method="GET" class="mb-4 flex flex-wrap items-end gap-3">
-        <x-form-field for="dari" label="Dari tanggal">
-            <x-input name="dari" type="date" :value="$filter['dari'] ?? ''" />
-        </x-form-field>
-        <x-form-field for="sampai" label="Sampai tanggal">
-            <x-input name="sampai" type="date" :value="$filter['sampai'] ?? ''" />
-        </x-form-field>
-        <x-form-field for="kategori" label="Kategori">
-            <x-select name="kategori" :options="$daftarKategori" :selected="$filter['kategori'] ?? ''" placeholder="Semua kategori" />
-        </x-form-field>
-        <div class="flex gap-2">
-            <x-button variant="secondary">Terapkan</x-button>
-            @if (request()->query())
-                <x-button variant="secondary" :href="route('pengeluaran.index')">Reset</x-button>
-            @endif
-        </div>
-    </form>
+    <x-filter-bar :dari="$filter['dari'] ?? ''" :sampai="$filter['sampai'] ?? ''">
+        <x-select name="kategori" :options="$daftarKategori" :selected="$filter['kategori'] ?? ''" placeholder="Semua kategori" class="w-48" />
+    </x-filter-bar>
 
     @if ($pengeluaran->isEmpty())
         <x-card>
@@ -28,7 +14,7 @@
                 description="{{ request()->query() ? 'Tidak ada pengeluaran yang cocok dengan filter.' : 'Catat beban operasional seperti listrik, air, atau sewa.' }}" />
         </x-card>
     @else
-        <x-table :headers="['Kode', 'Tanggal', 'Kategori', 'Deskripsi', 'Metode', 'Jumlah', 'Bukti', 'Aksi']">
+        <x-table :headers="['Kode', 'Tanggal', 'Kategori', 'Deskripsi', 'Metode', 'Jumlah', 'Bukti', 'Aksi']" :kanan="['Jumlah']">
             @foreach ($pengeluaran as $item)
                 <tr>
                     <td class="font-mono text-xs whitespace-nowrap">{{ $item->kode_pengeluaran }}</td>
@@ -44,13 +30,13 @@
                             <span class="text-gray-400">-</span>
                         @endif
                     </td>
-                    <td class="whitespace-nowrap">
+                    <td>
                         @if ($item->isBulanBerjalan())
-                            <div class="flex gap-2">
+                            <x-table.aksi>
                                 <x-button variant="secondary" size="sm" icon="pencil" :href="route('pengeluaran.edit', $item)">Ubah</x-button>
                                 <x-delete-button :action="route('pengeluaran.destroy', $item)" :id="'pengeluaran-'.$item->id_pengeluaran"
                                     :nama="$item->kode_pengeluaran.' ('.\App\Support\Format::rupiah($item->jumlah).')'" />
-                            </div>
+                            </x-table.aksi>
                         @else
                             {{-- Bulan sebelumnya terkunci karena laporan periode itu sudah berjalan. --}}
                             <span class="inline-flex items-center gap-1 text-xs text-gray-400" title="{{ \App\Services\PengeluaranService::PESAN_BULAN_LALU }}">
@@ -67,6 +53,6 @@
             </tr>
         </x-table>
 
-        <div class="mt-4">{{ $pengeluaran->links() }}</div>
+        <div>{{ $pengeluaran->links() }}</div>
     @endif
 </x-layouts::app>

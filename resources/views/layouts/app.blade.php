@@ -22,8 +22,8 @@
 
     {{-- Sidebar --}}
     <aside :class="sidebarBuka ? 'translate-x-0' : '-translate-x-full'"
-        class="fixed inset-y-0 left-0 z-40 flex w-64 print:hidden -translate-x-full flex-col bg-primary-900 text-primary-50 transition-transform duration-200 lg:translate-x-0">
-        <div class="flex h-16 items-center justify-between gap-2 border-b border-white/10 px-5">
+        class="fixed inset-y-0 left-0 z-40 flex h-dvh w-64 print:hidden -translate-x-full flex-col bg-primary-900 text-primary-50 transition-transform duration-200 lg:translate-x-0">
+        <div class="flex h-16 shrink-0 items-center justify-between gap-2 border-b border-white/10 px-5">
             <a href="{{ route('dashboard') }}" class="flex items-center gap-2 font-semibold">
                 <span class="flex size-8 items-center justify-center rounded-lg bg-primary-500 text-white">
                     <x-icon name="cube" class="size-5" />
@@ -35,30 +35,31 @@
             </button>
         </div>
 
-        <nav class="flex-1 overflow-y-auto px-3 py-4">
+        {{-- Gulir hanya bila menu lebih tinggi dari layar; scrollbar tipis senada sidebar (lihat app.css). --}}
+        <nav class="scrollbar-sidebar min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4">
             @include('layouts.partials.sidebar-menu')
         </nav>
     </aside>
 
     <div class="lg:pl-64 print:pl-0">
         {{-- Header --}}
-        <header class="sticky top-0 z-20 flex h-16 print:hidden items-center gap-3 border-b border-gray-200 bg-white/90 px-4 backdrop-blur sm:px-6">
-            <button type="button" class="rounded-lg p-2 text-gray-600 hover:bg-gray-100 lg:hidden" @click="sidebarBuka = true" aria-label="Buka menu">
+        <header class="sticky top-0 z-20 flex h-16 print:hidden items-center gap-3 border-b border-gray-200 bg-white/90 px-6 backdrop-blur">
+            <button type="button" class="-ml-2 rounded-lg p-2 text-gray-600 hover:bg-gray-100 lg:hidden" @click="sidebarBuka = true" aria-label="Buka menu">
                 <x-icon name="bars-3" class="size-6" />
             </button>
 
-            <div class="flex-1"></div>
+            <div class="min-w-0 flex-1"></div>
 
             {{-- Lonceng notifikasi stok minimum --}}
             @include('layouts.partials.notifikasi-stok')
 
             {{-- Menu pengguna --}}
-            <div class="relative" x-data="{ buka: false }" @click.outside="buka = false">
-                <button type="button" @click="buka = !buka" class="flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-gray-100">
-                    <span class="flex size-9 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700">
+            <div class="relative shrink-0" x-data="{ buka: false }" @click.outside="buka = false">
+                <button type="button" @click="buka = !buka" class="flex h-12 items-center gap-3 rounded-lg px-2 hover:bg-gray-100">
+                    <span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700">
                         {{ \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr(auth()->user()->nama, 0, 1)) }}
                     </span>
-                    <span class="hidden text-left sm:block">
+                    <span class="hidden text-left leading-tight whitespace-nowrap sm:block">
                         <span class="block text-sm font-medium text-gray-800">{{ auth()->user()->nama }}</span>
                         <span class="block text-xs text-gray-500">{{ auth()->user()->labelRole() }}</span>
                     </span>
@@ -81,7 +82,8 @@
             </div>
         </header>
 
-        <main class="px-4 py-6 sm:px-6 lg:px-8 print:p-0">
+        {{-- Padding halaman p-6 lg:p-8; jarak antar blok space-y-6 (blok halaman tidak perlu mb-*). --}}
+        <main class="space-y-6 p-6 lg:p-8 print:p-0">
             <x-alert />
             {{ $slot }}
         </main>

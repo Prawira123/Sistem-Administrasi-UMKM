@@ -11,28 +11,12 @@
         <x-button icon="plus" :href="route('kas.create', ['kategori' => 'modal'])">Catat Modal</x-button>
     </x-page-header>
 
-    <form method="GET" class="mb-4 flex flex-wrap items-end gap-3">
-        <x-form-field for="dari" label="Dari tanggal">
-            <x-input name="dari" type="date" :value="$dari->toDateString()" />
-        </x-form-field>
-        <x-form-field for="sampai" label="Sampai tanggal">
-            <x-input name="sampai" type="date" :value="$sampai->toDateString()" />
-        </x-form-field>
-        <x-form-field for="kategori" label="Kategori">
-            <x-select name="kategori" :options="$labelKategori" :selected="$filter['kategori'] ?? ''" placeholder="Semua kategori" />
-        </x-form-field>
-        <x-form-field for="jenis" label="Jenis">
-            <x-select name="jenis" :options="['masuk' => 'Masuk', 'keluar' => 'Keluar']" :selected="$filter['jenis'] ?? ''" placeholder="Masuk & keluar" />
-        </x-form-field>
-        <div class="flex gap-2">
-            <x-button variant="secondary">Terapkan</x-button>
-            @if (request()->query())
-                <x-button variant="secondary" :href="route('kas.index')">Reset</x-button>
-            @endif
-        </div>
-    </form>
+    <x-filter-bar :dari="$dari->toDateString()" :sampai="$sampai->toDateString()">
+        <x-select name="kategori" :options="$labelKategori" :selected="$filter['kategori'] ?? ''" placeholder="Semua kategori" class="w-48" />
+        <x-select name="jenis" :options="['masuk' => 'Masuk', 'keluar' => 'Keluar']" :selected="$filter['jenis'] ?? ''" placeholder="Masuk & keluar" class="w-48" />
+    </x-filter-bar>
 
-    <div class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <x-card>
             <p class="text-sm text-gray-500">Saldo awal ({{ \App\Support\Format::tanggal($dari) }})</p>
             <p class="text-xl font-semibold text-gray-900">@rupiah($saldoAwal)</p>
@@ -59,7 +43,7 @@
             <x-empty-state icon="banknotes" title="Tidak ada arus kas" description="Belum ada kas masuk atau keluar pada periode/filter ini." />
         </x-card>
     @else
-        <x-table :headers="array_merge(['Waktu', 'Kategori', 'Referensi', 'Keterangan', 'Masuk', 'Keluar'], $tersaring ? [] : ['Saldo'], ['Oleh', ''])">
+        <x-table :headers="array_merge(['Waktu', 'Kategori', 'Referensi', 'Keterangan', 'Masuk', 'Keluar'], $tersaring ? [] : ['Saldo'], ['Oleh', ''])" :kanan="['Masuk', 'Keluar', 'Saldo']">
             @foreach ($baris as $k)
                 <tr>
                     <td class="whitespace-nowrap">{{ \App\Support\Format::tanggalWaktu($k->tanggal) }}</td>
@@ -100,8 +84,8 @@
     @endif
 
     @if ($perKategori->isNotEmpty())
-        <x-card title="Ringkasan per kategori" class="mt-6" :padding="false">
-            <x-table :headers="['Jenis', 'Kategori', 'Total']" :polos="true">
+        <x-card title="Ringkasan per kategori" :padding="false">
+            <x-table :headers="['Jenis', 'Kategori', 'Total']" :kanan="['Total']" :polos="true">
                 @foreach ($perKategori as $r)
                     <tr>
                         <td><x-badge :status="$r->jenis" /></td>

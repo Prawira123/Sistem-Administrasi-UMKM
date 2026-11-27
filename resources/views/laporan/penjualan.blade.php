@@ -1,8 +1,7 @@
-<x-layouts::app title="Laporan Penjualan">
-    @include('laporan._kop')
+<x-layouts::laporan title="Laporan Penjualan" :kop="$kop">
     @include('laporan._filter-periode')
 
-    <div class="mb-6 grid gap-4 sm:grid-cols-3">
+    <div class="grid gap-4 sm:grid-cols-3">
         <x-card>
             <p class="text-sm text-gray-500">Total penjualan</p>
             <p class="text-xl font-semibold text-gray-900">@rupiah($total)</p>
@@ -25,7 +24,7 @@
             @if ($per_hari->isEmpty())
                 <x-empty-state icon="shopping-cart" title="Tidak ada penjualan" description="Belum ada penjualan selesai pada periode ini." />
             @else
-                <x-table :headers="['Tanggal', 'Transaksi', 'Unit', 'Total']" :polos="true">
+                <x-table :headers="['Tanggal', 'Transaksi', 'Unit', 'Total']" :kanan="['Transaksi', 'Unit', 'Total']" :polos="true">
                     @foreach ($per_hari as $h)
                         <tr>
                             <td>@tanggal($h['tanggal'])</td>
@@ -40,7 +39,7 @@
 
         <div class="space-y-6">
             <x-card title="Per metode pembayaran" :padding="false">
-                <x-table :headers="['Metode', 'Transaksi', 'Total']" :polos="true">
+                <x-table :headers="['Metode', 'Transaksi', 'Total']" :kanan="['Transaksi', 'Total']" :polos="true">
                     @forelse ($per_metode as $m)
                         <tr>
                             <td>{{ strtoupper($m['metode']) === 'QRIS' ? 'QRIS' : ucfirst($m['metode']) }}</td>
@@ -54,7 +53,7 @@
             </x-card>
 
             <x-card title="Barang terlaris" :padding="false">
-                <x-table :headers="['#', 'Barang', 'Qty', 'Omzet']" :polos="true">
+                <x-table :headers="['#', 'Barang', 'Qty', 'Omzet']" :kanan="['Qty', 'Omzet']" :polos="true">
                     @forelse ($per_barang as $i => $b)
                         <tr>
                             <td>{{ $i + 1 }}</td>
@@ -72,4 +71,4 @@
             </x-card>
         </div>
     </div>
-</x-layouts::app>
+</x-layouts::laporan>

@@ -3,18 +3,10 @@
         <x-button :href="route('stok-opname.create')" icon="plus">Buat Stok Opname</x-button>
     </x-page-header>
 
-    <form method="GET" class="mb-4 flex flex-wrap items-end gap-3">
-        <x-form-field for="status" label="Status">
-            <x-select name="status" :options="['draft' => 'Draft', 'diajukan' => 'Diajukan', 'final' => 'Final']"
-                :selected="$filter['status'] ?? ''" placeholder="Semua status" />
-        </x-form-field>
-        <div class="flex gap-2">
-            <x-button variant="secondary">Terapkan</x-button>
-            @if (request()->query())
-                <x-button variant="secondary" :href="route('stok-opname.index')">Reset</x-button>
-            @endif
-        </div>
-    </form>
+    <x-filter-bar>
+        <x-select name="status" :options="['draft' => 'Draft', 'diajukan' => 'Diajukan', 'final' => 'Final']"
+            :selected="$filter['status'] ?? ''" placeholder="Semua status" class="w-48" />
+    </x-filter-bar>
 
     @if ($opname->isEmpty())
         <x-card>
@@ -22,7 +14,7 @@
                 description="Buat draft, hitung stok fisik di rak, lalu ajukan untuk disetujui Administrator." />
         </x-card>
     @else
-        <x-table :headers="['Kode', 'Tanggal', 'Dibuat oleh', 'Barang', 'Berselisih', 'Status', 'Disetujui', '']">
+        <x-table :headers="['Kode', 'Tanggal', 'Dibuat oleh', 'Barang', 'Berselisih', 'Status', 'Disetujui', '']" :kanan="['Barang', 'Berselisih']">
             @foreach ($opname as $item)
                 <tr>
                     <td class="font-mono text-xs whitespace-nowrap">{{ $item->kode_opname }}</td>
@@ -40,16 +32,18 @@
                             -
                         @endif
                     </td>
-                    <td class="whitespace-nowrap">
-                        <x-button variant="secondary" size="sm" :href="route('stok-opname.show', $item)">Detail</x-button>
-                        @can('ubah-opname', $item)
-                            <x-button size="sm" icon="pencil" :href="route('stok-opname.edit', $item)">Input Hitungan</x-button>
-                        @endcan
+                    <td>
+                        <x-table.aksi>
+                            <x-button variant="secondary" size="sm" :href="route('stok-opname.show', $item)">Detail</x-button>
+                            @can('ubah-opname', $item)
+                                <x-button size="sm" icon="pencil" :href="route('stok-opname.edit', $item)">Input Hitungan</x-button>
+                            @endcan
+                        </x-table.aksi>
                     </td>
                 </tr>
             @endforeach
         </x-table>
 
-        <div class="mt-4">{{ $opname->links() }}</div>
+        <div>{{ $opname->links() }}</div>
     @endif
 </x-layouts::app>

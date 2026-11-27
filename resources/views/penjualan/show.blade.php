@@ -5,7 +5,7 @@
         <x-button variant="secondary" icon="printer" :href="route('penjualan.nota', [$penjualan, 'ukuran' => 80])" target="_blank">Nota 80 mm</x-button>
         @can('batalkan-penjualan')
             @if ($penjualan->bisaDibatalkan())
-                <x-button type="button" variant="danger" icon="x-circle" x-data x-on:click="$dispatch('buka-modal', 'batal-penjualan')">Batalkan</x-button>
+                <x-button type="button" variant="danger-outline" icon="x-circle" x-data x-on:click="$dispatch('buka-modal', 'batal-penjualan')">Batalkan</x-button>
             @endif
         @endcan
         <x-button :href="route('penjualan.create')" icon="shopping-cart">Transaksi Baru</x-button>
@@ -70,7 +70,7 @@
     </x-card>
 
     <x-card title="Rincian Barang" class="mt-6" :padding="false">
-        <x-table :headers="['Kode', 'Nama Barang', 'Jumlah', 'Harga Jual', 'Subtotal']" :polos="true">
+        <x-table :headers="['Kode', 'Nama Barang', 'Jumlah', 'Harga Jual', 'Subtotal']" :kanan="['Jumlah', 'Harga Jual', 'Subtotal']" :polos="true">
             @foreach ($penjualan->detail as $detail)
                 <tr>
                     <td class="font-mono text-xs">{{ $detail->barang->kode_barang }}</td>

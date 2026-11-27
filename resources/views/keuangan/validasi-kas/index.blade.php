@@ -7,19 +7,17 @@
         @endif
     </x-page-header>
 
-    <form method="GET" action="{{ route('validasi-kas.create') }}" class="mb-4 flex flex-wrap items-end gap-3">
-        <x-form-field for="tanggal" label="Validasi tanggal lain">
-            <x-input name="tanggal" type="date" :min="now()->startOfMonth()->toDateString()" :max="now()->toDateString()" :value="now()->toDateString()" />
-        </x-form-field>
-        <x-button variant="secondary">Buka</x-button>
-    </form>
+    <x-filter-bar :action="route('validasi-kas.create')" tombol="Buka" :ikon="null" :reset="false">
+        <label for="tanggal" class="text-sm font-medium text-gray-700">Validasi tanggal lain</label>
+        <x-input name="tanggal" type="date" :min="now()->startOfMonth()->toDateString()" :max="now()->toDateString()" :value="now()->toDateString()" class="w-44" />
+    </x-filter-bar>
 
     @if ($validasi->isEmpty())
         <x-card>
             <x-empty-state icon="check-circle" title="Belum ada validasi kas" description="Lakukan validasi setiap akhir hari setelah kasir tutup." />
         </x-card>
     @else
-        <x-table :headers="['Tanggal', 'Tunai Sistem', 'Uang Fisik', 'Selisih', 'Status', 'Catatan', 'Oleh', '']">
+        <x-table :headers="['Tanggal', 'Tunai Sistem', 'Uang Fisik', 'Selisih', 'Status', 'Catatan', 'Oleh', '']" :kanan="['Tunai Sistem', 'Uang Fisik', 'Selisih']">
             @foreach ($validasi as $v)
                 <tr>
                     <td class="whitespace-nowrap">@tanggal($v->tanggal)</td>
@@ -38,6 +36,6 @@
             @endforeach
         </x-table>
 
-        <div class="mt-4">{{ $validasi->links() }}</div>
+        <div>{{ $validasi->links() }}</div>
     @endif
 </x-layouts::app>

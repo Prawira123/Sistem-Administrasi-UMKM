@@ -1,19 +1,12 @@
-<x-layouts::app title="Laporan Arus Kas">
-    @include('laporan._kop')
+<x-layouts::laporan title="Laporan Arus Kas" :kop="$kop">
 
-    <form method="GET" class="mb-6 flex flex-wrap items-end gap-3 print:hidden">
-        <x-form-field for="dari" label="Dari tanggal">
-            <x-input name="dari" type="date" :value="$dari->toDateString()" />
-        </x-form-field>
-        <x-form-field for="sampai" label="Sampai tanggal">
-            <x-input name="sampai" type="date" :value="$sampai->toDateString()" />
-        </x-form-field>
-        <label class="mb-2 inline-flex items-center gap-2 text-sm text-gray-700">
-            <input type="checkbox" name="rincian" value="1" @checked($rincian->isNotEmpty() || request()->boolean('rincian')) class="rounded border-gray-300">
+    <x-filter-bar :dari="$dari->toDateString()" :sampai="$sampai->toDateString()" tombol="Tampilkan" :reset="false">
+        <label class="inline-flex h-10 items-center gap-2 text-sm text-gray-700">
+            <input type="checkbox" name="rincian" value="1" @checked($rincian->isNotEmpty() || request()->boolean('rincian'))
+                class="size-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500">
             Tampilkan rincian per transaksi
         </label>
-        <x-button variant="secondary">Tampilkan</x-button>
-    </form>
+    </x-filter-bar>
 
     <x-card class="max-w-3xl" :padding="false">
         <table class="w-full text-sm">
@@ -32,7 +25,7 @@
                 @empty
                     <tr><td colspan="2" class="px-4 py-2 pl-8 text-gray-500">Tidak ada</td></tr>
                 @endforelse
-                <tr class="font-medium">
+                <tr class="baris-total font-medium">
                     <td class="px-4 py-2">Total kas masuk</td>
                     <td class="px-4 py-2 text-right whitespace-nowrap text-success-700">@rupiah($total_masuk)</td>
                 </tr>
@@ -46,16 +39,16 @@
                 @empty
                     <tr><td colspan="2" class="px-4 py-2 pl-8 text-gray-500">Tidak ada</td></tr>
                 @endforelse
-                <tr class="font-medium">
+                <tr class="baris-total font-medium">
                     <td class="px-4 py-2">Total kas keluar</td>
                     <td class="px-4 py-2 text-right whitespace-nowrap text-danger-700">(@rupiah($total_keluar))</td>
                 </tr>
 
-                <tr class="font-medium">
+                <tr class="baris-total font-medium">
                     <td class="px-4 py-2">Kenaikan (penurunan) kas</td>
                     <td class="px-4 py-2 text-right whitespace-nowrap">@rupiah($arus_bersih)</td>
                 </tr>
-                <tr class="bg-gray-50 text-base font-bold text-gray-900">
+                <tr class="baris-total bg-gray-50 text-base font-bold text-gray-900">
                     <td class="px-4 py-3">Saldo akhir ({{ \App\Support\Format::tanggal($sampai) }})</td>
                     <td class="px-4 py-3 text-right whitespace-nowrap">@rupiah($saldo_akhir)</td>
                 </tr>
@@ -64,8 +57,8 @@
     </x-card>
 
     @if ($rincian->isNotEmpty())
-        <x-card title="Rincian per transaksi" class="mt-6" :padding="false">
-            <x-table :headers="['Waktu', 'Kategori', 'Keterangan', 'Masuk', 'Keluar', 'Saldo']" :polos="true">
+        <x-card title="Rincian per transaksi" :padding="false">
+            <x-table :headers="['Waktu', 'Kategori', 'Keterangan', 'Masuk', 'Keluar', 'Saldo']" :kanan="['Masuk', 'Keluar', 'Saldo']" :polos="true">
                 @foreach ($rincian as $r)
                     <tr>
                         <td class="whitespace-nowrap">{{ \App\Support\Format::tanggalWaktu($r['tanggal']) }}</td>
@@ -79,4 +72,4 @@
             </x-table>
         </x-card>
     @endif
-</x-layouts::app>
+</x-layouts::laporan>

@@ -3,7 +3,7 @@
         <x-button :href="route('supplier.create')" icon="plus">Tambah Supplier</x-button>
     </x-page-header>
 
-    <x-search-bar :value="$cari" placeholder="Cari kode, nama, atau kontak..." />
+    <x-filter-bar :cari="$cari" placeholder="Cari kode, nama, atau kontak..." />
 
     @if ($supplier->isEmpty())
         <x-card>
@@ -24,17 +24,17 @@
                     <td>{{ $item->nama_kontak ?? '-' }}</td>
                     <td class="whitespace-nowrap">{{ $item->no_telepon ?? '-' }}</td>
                     <td><x-badge :status="$item->status" /></td>
-                    <td class="whitespace-nowrap">
-                        <div class="flex gap-2">
+                    <td>
+                        <x-table.aksi>
                             <x-button variant="secondary" size="sm" icon="pencil" :href="route('supplier.edit', $item)">Ubah</x-button>
                             <x-delete-button :action="route('supplier.destroy', $item)" :id="'supplier-'.$item->id_supplier"
                                 :nama="$item->nama_supplier" />
-                        </div>
+                        </x-table.aksi>
                     </td>
                 </tr>
             @endforeach
         </x-table>
 
-        <div class="mt-4">{{ $supplier->links() }}</div>
+        <div>{{ $supplier->links() }}</div>
     @endif
 </x-layouts::app>
