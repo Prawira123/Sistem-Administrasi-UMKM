@@ -25,7 +25,7 @@
         </div>
     @endunless
 
-    <x-card class="max-w-3xl" :padding="false">
+    <x-card class="max-w-full" :padding="false">
         <table class="w-full text-sm">
             <tbody class="divide-y divide-gray-100">
                 <tr class="font-semibold text-gray-900">
