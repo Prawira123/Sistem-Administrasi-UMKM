@@ -44,9 +44,15 @@
         </x-form-field>
     @endcan
 
-    <x-form-field for="status" label="Status" wajib bantuan="Barang nonaktif tidak bisa dijual.">
-        <x-select name="status" :options="['aktif' => 'Aktif', 'nonaktif' => 'Nonaktif']" :selected="old('status', $barang->status)" />
-    </x-form-field>
+    @can('hapus-barang')
+        <x-form-field for="status" label="Status" wajib bantuan="Barang nonaktif tidak bisa dijual.">
+            <x-select name="status" :options="['aktif' => 'Aktif', 'nonaktif' => 'Nonaktif']" :selected="old('status', $barang->status)" />
+        </x-form-field>
+    @else
+        <x-form-field for="status" label="Status" bantuan="Status barang hanya dapat diubah oleh Administrator.">
+            <x-input name="status_info" disabled :value="ucfirst($barang->status ?? 'aktif')" />
+        </x-form-field>
+    @endcan
 </div>
 
 @if ($barang->exists)

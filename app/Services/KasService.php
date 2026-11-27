@@ -8,6 +8,7 @@ use App\Models\Penjualan;
 use App\Models\User;
 use App\Support\Uang;
 use Carbon\CarbonInterface;
+use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 
 /**
@@ -71,6 +72,8 @@ class KasService
     /** Kategori yang dicatat manual oleh Administrator dari buku kas (modul 7). */
     public const KATEGORI_MANUAL = ['modal' => self::MASUK, 'prive' => self::KELUAR];
 
+    public const PESAN_BULAN_LALU = 'Kas bulan sebelumnya tidak dapat dihapus karena laporan periode tersebut sudah berjalan.';
+
     /**
      * Ubah nominal/tanggal/keterangan baris kas yang sudah ada (mis. pengeluaran operasional diedit).
      * Jenis, kategori, dan referensi tidak berubah; aturan validasi yang sama tetap dijalankan.
@@ -105,6 +108,9 @@ class KasService
     {
         if (! array_key_exists($kas->kategori, self::KATEGORI_MANUAL)) {
             throw new InvalidArgumentException('Hanya kas modal atau prive yang bisa dihapus dari buku kas; kas lain mengikuti transaksinya.');
+        }
+        if (! $kas->isBulanBerjalan()) {
+            throw ValidationException::withMessages(['kas' => self::PESAN_BULAN_LALU]);
         }
 
         $kas->delete();

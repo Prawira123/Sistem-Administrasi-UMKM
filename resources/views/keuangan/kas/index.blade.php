@@ -70,7 +70,11 @@
                         @elseif ($k->barangMasuk)
                             <a href="{{ route('barang-masuk.show', $k->barangMasuk) }}" class="text-primary-700 hover:underline">{{ $k->barangMasuk->kode_barang_masuk }}</a>
                         @elseif ($k->pengeluaran)
-                            <a href="{{ route('pengeluaran.edit', $k->pengeluaran) }}" class="text-primary-700 hover:underline">{{ $k->pengeluaran->kode_pengeluaran }}</a>
+                            @if ($k->pengeluaran->isBulanBerjalan())
+                                <a href="{{ route('pengeluaran.edit', $k->pengeluaran) }}" class="text-primary-700 hover:underline">{{ $k->pengeluaran->kode_pengeluaran }}</a>
+                            @else
+                                {{ $k->pengeluaran->kode_pengeluaran }}
+                            @endif
                         @elseif ($k->validasiKas)
                             <a href="{{ route('validasi-kas.show', $k->validasiKas) }}" class="text-primary-700 hover:underline">Validasi @tanggal($k->validasiKas->tanggal)</a>
                         @else
@@ -85,7 +89,7 @@
                     @endunless
                     <td class="whitespace-nowrap">{{ $k->user->nama }}</td>
                     <td>
-                        @if (array_key_exists($k->kategori, \App\Services\KasService::KATEGORI_MANUAL))
+                        @if ($k->bisaDihapus())
                             <x-delete-button :action="route('kas.destroy', $k)" :id="'kas-'.$k->id_kas"
                                 :nama="$labelKategori[$k->kategori].' '.\App\Support\Format::rupiah($k->jumlah)" />
                         @endif

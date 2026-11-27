@@ -25,6 +25,8 @@
     @can('batalkan-penjualan')
         @if ($penjualan->status === 'selesai' && ! $penjualan->isBulanBerjalan())
             <x-alert type="warning">{{ \App\Services\PenjualanService::PESAN_BULAN_LALU }}</x-alert>
+        @elseif ($penjualan->status === 'selesai' && $penjualan->isKasSudahDivalidasi())
+            <x-alert type="warning">{{ \App\Services\PenjualanService::PESAN_KAS_DIVALIDASI }}</x-alert>
         @endif
     @endcan
 

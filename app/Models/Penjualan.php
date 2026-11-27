@@ -48,9 +48,16 @@ class Penjualan extends Model
         return $this->tanggal_penjualan->isSameMonth(now());
     }
 
+    /** Penjualan tunai yang tanggalnya sudah ada di validasi_kas (uang fisik sudah dicocokkan). */
+    public function isKasSudahDivalidasi(): bool
+    {
+        return $this->metode_pembayaran === 'tunai'
+            && ValidasiKas::whereDate('tanggal', $this->tanggal_penjualan->toDateString())->exists();
+    }
+
     public function bisaDibatalkan(): bool
     {
-        return $this->status === 'selesai' && $this->isBulanBerjalan();
+        return $this->status === 'selesai' && $this->isBulanBerjalan() && ! $this->isKasSudahDivalidasi();
     }
 
     public function user(): BelongsTo

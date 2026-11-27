@@ -31,6 +31,12 @@ class PengeluaranOperasional extends Model
         ];
     }
 
+    /** Pengeluaran bulan sebelumnya terkunci (laporan periode itu sudah berjalan). */
+    public function isBulanBerjalan(): bool
+    {
+        return $this->tanggal_pengeluaran->isSameMonth(now());
+    }
+
     public function kategori(): BelongsTo
     {
         return $this->belongsTo(

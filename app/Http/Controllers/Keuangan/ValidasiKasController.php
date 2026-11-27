@@ -37,7 +37,11 @@ class ValidasiKasController extends Controller implements HasMiddleware
     /** /validasi-kas/create?tanggal=Y-m-d (default hari ini): menampilkan total tunai sistem untuk tanggal itu. */
     public function create(Request $request): View|RedirectResponse
     {
-        $request->validate(['tanggal' => ['nullable', 'date_format:Y-m-d', 'before_or_equal:today']], [
+        $awalBulan = now()->startOfMonth();
+        $request->validate([
+            'tanggal' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:'.$awalBulan->toDateString(), 'before_or_equal:today'],
+        ], [
+            'tanggal.after_or_equal' => 'Validasi kas hanya untuk tanggal di bulan berjalan (mulai '.$awalBulan->format('d/m/Y').').',
             'tanggal.before_or_equal' => 'Validasi kas tidak bisa dibuat untuk tanggal yang akan datang.',
         ]);
 

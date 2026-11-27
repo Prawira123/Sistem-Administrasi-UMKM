@@ -118,6 +118,42 @@ class MasterDataTest extends TestCase
         $this->assertSame('5000.00', $barang->harga_jual);
     }
 
+    // Status barang hanya bisa diatur oleh pengguna dengan gate hapus-barang (Administrator)
+    public function test_status_barang_hanya_diatur_administrator(): void
+    {
+        $kategori = KategoriBarang::factory()->create();
+        $data = fn (array $ubah = []) => $ubah + ['id_kategori' => $kategori->id_kategori, 'nama_barang' => 'Teh Botol',
+            'satuan' => 'botol', 'stok_minimum' => 2, 'harga_jual' => 4000];
+
+        // Kasir menambah barang dengan status nonaktif → status diabaikan, barang tetap aktif (default kolom).
+        $this->actingAs($this->kasir)->post(route('barang.store'), $data(['kode_barang' => 'TEH-01', 'status' => 'nonaktif']))
+            ->assertSessionHasNoErrors();
+        $dariKasir = Barang::where('kode_barang', 'TEH-01')->sole();
+        $this->assertSame('aktif', $dariKasir->status);
+
+        // Kasir mengubah barang: status yang dikirim diabaikan, status lama tetap (aktif maupun nonaktif).
+        $this->put(route('barang.update', $dariKasir), $data(['kode_barang' => 'TEH-01', 'status' => 'nonaktif']))
+            ->assertSessionHasNoErrors();
+        $this->assertSame('aktif', $dariKasir->fresh()->status);
+
+        $nonaktif = Barang::factory()->create(['status' => 'nonaktif', 'id_kategori' => $kategori->id_kategori]);
+        $this->put(route('barang.update', $nonaktif), $data(['kode_barang' => $nonaktif->kode_barang, 'status' => 'aktif']))
+            ->assertSessionHasNoErrors();
+        $this->assertSame('nonaktif', $nonaktif->fresh()->status);
+
+        // Form kasir tidak menampilkan pilihan status.
+        $this->get(route('barang.edit', $dariKasir))->assertOk()
+            ->assertDontSee('name="status"', false)->assertSee('Status barang hanya dapat diubah oleh Administrator.');
+
+        // Administrator: status wajib dan bisa diubah.
+        $this->actingAs($this->admin)->put(route('barang.update', $dariKasir), $data(['kode_barang' => 'TEH-01']))
+            ->assertSessionHasErrors('status');
+        $this->put(route('barang.update', $dariKasir), $data(['kode_barang' => 'TEH-01', 'status' => 'nonaktif']))
+            ->assertSessionHasNoErrors();
+        $this->assertSame('nonaktif', $dariKasir->fresh()->status);
+        $this->get(route('barang.edit', $dariKasir))->assertOk()->assertSee('name="status"', false);
+    }
+
     // 4. Kasir tidak bisa menghapus barang (403) dan tidak bisa membuka halaman supplier (403)
     public function test_kasir_tidak_bisa_menghapus_barang_dan_membuka_supplier(): void
     {

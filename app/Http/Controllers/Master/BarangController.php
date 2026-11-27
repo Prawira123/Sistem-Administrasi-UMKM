@@ -8,6 +8,7 @@ use App\Http\Requests\Master\UpdateBarangRequest;
 use App\Models\Barang;
 use App\Models\KategoriBarang;
 use App\Services\NomorOtomatisService;
+use App\Services\NotifikasiStokService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -66,6 +67,7 @@ class BarangController extends Controller
 
         $hasil = Barang::aktif()
             ->where('stok', '>', 0)
+            ->where('harga_jual', '>', 0) // barang tanpa harga jual tidak ditawarkan di kasir
             ->where(fn ($w) => $w->where('kode_barang', 'like', $pola)->orWhere('nama_barang', 'like', $pola))
             ->orderByRaw('kode_barang = ? DESC', [$q])
             ->orderBy('nama_barang')
@@ -112,10 +114,18 @@ class BarangController extends Controller
         ]);
     }
 
-    public function update(UpdateBarangRequest $request, Barang $barang): RedirectResponse
+    public function update(UpdateBarangRequest $request, Barang $barang, NotifikasiStokService $notifikasi): RedirectResponse
     {
         // validated() tidak pernah berisi stok/HPP, dan berisi harga_jual hanya untuk Administrator.
-        $barang->update($request->validated());
+        DB::transaction(function () use ($request, $barang, $notifikasi) {
+            $barang->update($request->validated());
+
+            // stok_minimum berubah → status notifikasi stok minimum disesuaikan dengan batas baru.
+            if ($barang->wasChanged('stok_minimum')) {
+                $notifikasi->periksa($barang);
+                $notifikasi->tutupBilaAman($barang);
+            }
+        });
 
         return redirect()->route('barang.index')->with('success', 'Data barang berhasil diperbarui.');
     }

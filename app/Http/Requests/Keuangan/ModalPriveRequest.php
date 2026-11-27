@@ -18,7 +18,7 @@ class ModalPriveRequest extends FormRequest
     {
         return [
             'kategori' => ['required', Rule::in(array_keys(KasService::KATEGORI_MANUAL))],
-            'tanggal' => ['required', 'date_format:Y-m-d', 'before_or_equal:today'],
+            'tanggal' => ['required', 'date_format:Y-m-d', 'after_or_equal:'.now()->startOfMonth()->toDateString(), 'before_or_equal:today'],
             'jumlah' => ['required', 'numeric', 'decimal:0,2', 'gt:0', 'max:9999999999999.99'],
             'keterangan' => ['required', 'string', 'max:255'],
         ];
@@ -28,6 +28,7 @@ class ModalPriveRequest extends FormRequest
     {
         return [
             'kategori.in' => 'Jenis transaksi harus modal atau prive.',
+            'tanggal.after_or_equal' => 'Tanggal modal/prive harus di bulan berjalan (mulai '.now()->startOfMonth()->format('d/m/Y').').',
             'tanggal.before_or_equal' => 'Tanggal tidak boleh melebihi hari ini.',
             'jumlah.required' => 'Jumlah wajib diisi.',
             'jumlah.numeric' => 'Jumlah harus berupa angka.',

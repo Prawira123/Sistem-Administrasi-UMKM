@@ -43,6 +43,40 @@ class BarangMasukTest extends TestCase
         ]);
     }
 
+    // Notifikasi stok minimum diperiksa setelah barang masuk dan setelah stok_minimum diubah
+    public function test_notifikasi_diperiksa_setelah_barang_masuk_dan_perubahan_stok_minimum(): void
+    {
+        // Stok awal 3 dibuat lewat factory, jadi belum ada notifikasi.
+        $barang = Barang::factory()->stok(3, 1000)->create(['nama_barang' => 'Gula 1 kg', 'stok_minimum' => 10]);
+        $terbuka = fn () => NotifikasiStok::where('id_barang', $barang->id_barang)->whereIn('status', ['baru', 'dibaca']);
+
+        // Barang masuk sedikit: stok 5 masih ≤ minimum 10 → notifikasi dibuat.
+        $this->kirim($this->admin, [['id_barang' => $barang->id_barang, 'jumlah' => 2, 'harga_beli' => 1000]])->assertSessionHasNoErrors();
+        $notif = $terbuka()->sole();
+        $this->assertSame(5, $notif->stok_saat_ini);
+        $this->assertSame(10, $notif->stok_minimum);
+
+        $ubah = fn (int $min, string $nama = 'Gula 1 kg') => $this->actingAs($this->admin)->put(route('barang.update', $barang), [
+            'kode_barang' => $barang->kode_barang, 'id_kategori' => $barang->id_kategori, 'nama_barang' => $nama,
+            'satuan' => $barang->satuan, 'harga_jual' => 5000, 'stok_minimum' => $min, 'status' => 'aktif',
+        ])->assertSessionHasNoErrors();
+
+        // Minimum diturunkan ke 3: stok 5 sudah aman → notifikasi terbuka ditutup.
+        $ubah(3);
+        $this->assertSame(0, $terbuka()->count());
+        $this->assertSame('selesai', $notif->fresh()->status);
+
+        // Minimum dinaikkan ke 8: stok 5 ≤ 8 → notifikasi baru dibuat dengan batas baru.
+        $ubah(8);
+        $baru = $terbuka()->sole();
+        $this->assertSame(8, $baru->stok_minimum);
+
+        // Ubah data lain tanpa mengubah stok_minimum → tidak ada notifikasi ganda.
+        $ubah(8, 'Gula Pasir 1 kg');
+        $this->assertSame(1, $terbuka()->count());
+        $this->assertSame(2, NotifikasiStok::where('id_barang', $barang->id_barang)->count());
+    }
+
     // 1. Stok bertambah, HPP sesuai contoh (10 @ 3.000 + 20 @ 3.600 → 3.400), harga_beli_terakhir terisi
     public function test_simpan_barang_masuk_menambah_stok_dan_menghitung_hpp_rata_rata(): void
     {

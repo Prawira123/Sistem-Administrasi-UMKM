@@ -120,6 +120,10 @@ class KasController extends Controller implements HasMiddleware
 
     public function destroy(Kas $kas): RedirectResponse
     {
+        if (array_key_exists($kas->kategori, KasService::KATEGORI_MANUAL) && ! $kas->isBulanBerjalan()) {
+            return redirect()->route('kas.index')->with('error', KasService::PESAN_BULAN_LALU);
+        }
+
         $this->kasService->hapusManual($kas);
 
         return redirect()->route('kas.index')->with('success', 'Baris kas '.$kas->kategori.' dihapus.');

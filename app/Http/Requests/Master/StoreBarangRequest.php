@@ -11,6 +11,8 @@ use Illuminate\Validation\Rule;
  *   tidak ikut ke $request->validated() dan tidak pernah berubah lewat CRUD.
  * - harga_jual hanya masuk aturan bila pengguna boleh 'ubah-harga-jual' (Administrator).
  *   Untuk Kasir field itu diabaikan di server walaupun dikirim.
+ * - status hanya masuk aturan bila pengguna boleh 'hapus-barang' (Administrator). Barang baru dari Kasir
+ *   memakai default kolom 'aktif'; saat diubah Kasir, status lama tetap.
  */
 class StoreBarangRequest extends FormRequest
 {
@@ -27,11 +29,15 @@ class StoreBarangRequest extends FormRequest
             'nama_barang' => ['required', 'string', 'max:150'],
             'satuan' => ['required', 'string', 'max:20'],
             'stok_minimum' => ['required', 'integer', 'min:0', 'max:1000000'],
-            'status' => ['required', 'in:aktif,nonaktif'],
         ];
 
         if ($this->bolehUbahHargaJual()) {
             $aturan['harga_jual'] = ['required', 'numeric', 'decimal:0,2', 'min:0', 'max:9999999999999.99'];
+        }
+
+        // Menonaktifkan barang setara dengan menariknya dari penjualan, jadi hanya untuk yang boleh menghapus barang.
+        if ($this->bolehUbahStatus()) {
+            $aturan['status'] = ['required', 'in:aktif,nonaktif'];
         }
 
         return $aturan;
@@ -51,6 +57,11 @@ class StoreBarangRequest extends FormRequest
     protected function bolehUbahHargaJual(): bool
     {
         return $this->user()->can('ubah-harga-jual');
+    }
+
+    protected function bolehUbahStatus(): bool
+    {
+        return $this->user()->can('hapus-barang');
     }
 
     protected function aturanKodeUnik(): \Illuminate\Validation\Rules\Unique

@@ -14,7 +14,7 @@
         <x-card>
             <div class="grid gap-4 sm:grid-cols-2">
                 <x-form-field for="tanggal" label="Tanggal" wajib>
-                    <x-input name="tanggal" type="date" required :max="now()->toDateString()" :value="old('tanggal', now()->toDateString())" />
+                    <x-input name="tanggal" type="date" required :min="now()->startOfMonth()->toDateString()" :max="now()->toDateString()" :value="old('tanggal', now()->toDateString())" />
                 </x-form-field>
 
                 <x-form-field for="jumlah" label="Jumlah (Rp)" wajib>

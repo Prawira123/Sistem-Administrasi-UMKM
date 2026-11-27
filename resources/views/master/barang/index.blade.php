@@ -14,7 +14,9 @@
                 description="{{ request()->query() ? 'Tidak ada barang yang cocok dengan pencarian/filter.' : 'Belum ada data barang.' }}" />
         </x-card>
     @else
-        <x-table :headers="['Kode', 'Nama Barang', 'Kategori', 'Stok', 'Stok Min.', 'HPP Rata-rata', 'Harga Jual', 'Status', 'Aksi']">
+        {{-- Kolom HPP hanya untuk pemegang akses keuangan (Administrator). --}}
+        @php($lihatHpp = auth()->user()->can('akses-keuangan'))
+        <x-table :headers="array_values(array_filter(['Kode', 'Nama Barang', 'Kategori', 'Stok', 'Stok Min.', $lihatHpp ? 'HPP Rata-rata' : null, 'Harga Jual', 'Status', 'Aksi']))">
             @foreach ($barang as $item)
                 <tr>
                     <td class="font-mono text-xs whitespace-nowrap">{{ $item->kode_barang }}</td>
@@ -32,7 +34,9 @@
                         @endif
                     </td>
                     <td class="text-right">{{ $item->stok_minimum }}</td>
-                    <td class="text-right whitespace-nowrap">@rupiah($item->hpp_rata_rata)</td>
+                    @can('akses-keuangan')
+                        <td class="text-right whitespace-nowrap">@rupiah($item->hpp_rata_rata)</td>
+                    @endcan
                     <td class="text-right whitespace-nowrap">
                         @if ((float) $item->harga_jual > 0)
                             @rupiah($item->harga_jual)

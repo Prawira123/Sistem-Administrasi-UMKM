@@ -18,7 +18,7 @@
                 </x-form-field>
 
                 <x-form-field for="tanggal_pengeluaran" label="Tanggal" wajib>
-                    <x-input name="tanggal_pengeluaran" type="date" required :max="now()->toDateString()"
+                    <x-input name="tanggal_pengeluaran" type="date" required :min="now()->startOfMonth()->toDateString()" :max="now()->toDateString()"
                         :value="old('tanggal_pengeluaran', $pengeluaran->tanggal_pengeluaran?->toDateString())" />
                 </x-form-field>
 

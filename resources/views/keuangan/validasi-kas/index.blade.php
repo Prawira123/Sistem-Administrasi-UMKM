@@ -9,7 +9,7 @@
 
     <form method="GET" action="{{ route('validasi-kas.create') }}" class="mb-4 flex flex-wrap items-end gap-3">
         <x-form-field for="tanggal" label="Validasi tanggal lain">
-            <x-input name="tanggal" type="date" :max="now()->toDateString()" :value="now()->toDateString()" />
+            <x-input name="tanggal" type="date" :min="now()->startOfMonth()->toDateString()" :max="now()->toDateString()" :value="now()->toDateString()" />
         </x-form-field>
         <x-button variant="secondary">Buka</x-button>
     </form>

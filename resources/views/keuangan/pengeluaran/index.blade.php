@@ -45,11 +45,18 @@
                         @endif
                     </td>
                     <td class="whitespace-nowrap">
-                        <div class="flex gap-2">
-                            <x-button variant="secondary" size="sm" icon="pencil" :href="route('pengeluaran.edit', $item)">Ubah</x-button>
-                            <x-delete-button :action="route('pengeluaran.destroy', $item)" :id="'pengeluaran-'.$item->id_pengeluaran"
-                                :nama="$item->kode_pengeluaran.' ('.\App\Support\Format::rupiah($item->jumlah).')'" />
-                        </div>
+                        @if ($item->isBulanBerjalan())
+                            <div class="flex gap-2">
+                                <x-button variant="secondary" size="sm" icon="pencil" :href="route('pengeluaran.edit', $item)">Ubah</x-button>
+                                <x-delete-button :action="route('pengeluaran.destroy', $item)" :id="'pengeluaran-'.$item->id_pengeluaran"
+                                    :nama="$item->kode_pengeluaran.' ('.\App\Support\Format::rupiah($item->jumlah).')'" />
+                            </div>
+                        @else
+                            {{-- Bulan sebelumnya terkunci karena laporan periode itu sudah berjalan. --}}
+                            <span class="inline-flex items-center gap-1 text-xs text-gray-400" title="{{ \App\Services\PengeluaranService::PESAN_BULAN_LALU }}">
+                                <x-icon name="lock-closed" class="size-4" /> Terkunci
+                            </span>
+                        @endif
                     </td>
                 </tr>
             @endforeach

@@ -32,6 +32,17 @@ class Kas extends Model
         ];
     }
 
+    public function isBulanBerjalan(): bool
+    {
+        return $this->tanggal->isSameMonth(now());
+    }
+
+    /** Hanya modal/prive (input manual) bulan berjalan yang boleh dihapus dari buku kas. */
+    public function bisaDihapus(): bool
+    {
+        return in_array($this->kategori, ['modal', 'prive'], true) && $this->isBulanBerjalan();
+    }
+
     public function penjualan(): BelongsTo
     {
         return $this->belongsTo(Penjualan::class, 'id_penjualan', 'id_penjualan');

@@ -88,8 +88,10 @@ class BarangMasukService
                     $user,
                 );
 
-                // 4. Stok kembali di atas minimum → notifikasi terbuka ditutup.
+                // 4. Stok kembali di atas minimum → notifikasi terbuka ditutup;
+                //    masih ≤ minimum (barang masuk sedikit) → pastikan ada notifikasi terbuka.
                 $this->notifikasi->tutupBilaAman($barang);
+                $this->notifikasi->periksa($barang);
 
                 $total = Uang::tambah($total, $subtotal);
             }

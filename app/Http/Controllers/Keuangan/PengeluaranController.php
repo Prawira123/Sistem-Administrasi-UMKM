@@ -66,8 +66,12 @@ class PengeluaranController extends Controller implements HasMiddleware
             ->with('success', "Pengeluaran {$pengeluaran->kode_pengeluaran} disimpan dan tercatat sebagai kas keluar.");
     }
 
-    public function edit(PengeluaranOperasional $pengeluaran): View
+    public function edit(PengeluaranOperasional $pengeluaran): View|RedirectResponse
     {
+        if (! $pengeluaran->isBulanBerjalan()) {
+            return $this->tolakBulanLalu();
+        }
+
         return view('keuangan.pengeluaran.form', [
             'pengeluaran' => $pengeluaran,
             'daftarKategori' => $this->daftarKategori(),
@@ -76,6 +80,10 @@ class PengeluaranController extends Controller implements HasMiddleware
 
     public function update(PengeluaranRequest $request, PengeluaranOperasional $pengeluaran): RedirectResponse
     {
+        if (! $pengeluaran->isBulanBerjalan()) {
+            return $this->tolakBulanLalu();
+        }
+
         $this->service->perbarui(
             $pengeluaran,
             $request->safe()->except(['bukti', 'hapus_bukti']),
@@ -89,6 +97,10 @@ class PengeluaranController extends Controller implements HasMiddleware
 
     public function destroy(PengeluaranOperasional $pengeluaran): RedirectResponse
     {
+        if (! $pengeluaran->isBulanBerjalan()) {
+            return $this->tolakBulanLalu();
+        }
+
         $this->service->hapus($pengeluaran);
 
         return redirect()->route('pengeluaran.index')
@@ -101,6 +113,12 @@ class PengeluaranController extends Controller implements HasMiddleware
         abort_unless($pengeluaran->bukti && Storage::disk(PengeluaranService::DISK)->exists($pengeluaran->bukti), 404);
 
         return Storage::disk(PengeluaranService::DISK)->response($pengeluaran->bukti);
+    }
+
+    /** Pengeluaran bulan sebelumnya terkunci (dicek juga di PengeluaranService). */
+    private function tolakBulanLalu(): RedirectResponse
+    {
+        return redirect()->route('pengeluaran.index')->with('error', PengeluaranService::PESAN_BULAN_LALU);
     }
 
     private function daftarKategori()

@@ -28,7 +28,9 @@
             <x-empty-state title="Belum ada mutasi" description="Tidak ada mutasi stok barang ini yang cocok dengan filter." />
         </x-card>
     @else
-        <x-table :headers="['Waktu', 'Jenis', 'Sumber', 'Masuk', 'Keluar', 'Stok Sebelum', 'Stok Sesudah', 'HPP/Unit', 'Keterangan', 'Oleh']">
+        {{-- Kolom HPP hanya untuk pemegang akses keuangan (Administrator). --}}
+        @php($lihatHpp = auth()->user()->can('akses-keuangan'))
+        <x-table :headers="array_values(array_filter(['Waktu', 'Jenis', 'Sumber', 'Masuk', 'Keluar', 'Stok Sebelum', 'Stok Sesudah', $lihatHpp ? 'HPP/Unit' : null, 'Keterangan', 'Oleh']))">
             @foreach ($mutasi as $m)
                 <tr>
                     <td class="whitespace-nowrap">{{ \App\Support\Format::tanggalWaktu($m->tanggal) }}</td>
@@ -50,7 +52,9 @@
                     <td class="text-right">{{ $m->jumlah_keluar ?: '' }}</td>
                     <td class="text-right">{{ $m->stok_sebelum }}</td>
                     <td class="text-right font-semibold">{{ $m->stok_sesudah }}</td>
-                    <td class="text-right whitespace-nowrap">@rupiah($m->hpp_satuan)</td>
+                    @can('akses-keuangan')
+                        <td class="text-right whitespace-nowrap">@rupiah($m->hpp_satuan)</td>
+                    @endcan
                     <td class="min-w-48 text-xs">{{ $m->keterangan }}</td>
                     <td class="whitespace-nowrap">{{ $m->user->nama }}</td>
                 </tr>

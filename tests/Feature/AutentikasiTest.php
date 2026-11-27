@@ -58,6 +58,28 @@ class AutentikasiTest extends TestCase
         $this->assertGuest();
     }
 
+    // Akun yang dinonaktifkan saat masih login dikeluarkan pada request berikutnya
+    public function test_akun_dinonaktifkan_saat_login_langsung_dikeluarkan(): void
+    {
+        $kasir = User::factory()->kasir()->create(['username' => 'kasir']);
+        $this->actingAs($kasir)->get(route('dashboard'))->assertOk();
+        $this->session(['penanda' => 'sesi-lama']);
+
+        // Administrator menonaktifkan akun ini dari perangkat lain.
+        $kasir->forceFill(['status' => User::STATUS_NONAKTIF])->save();
+
+        $this->get(route('penjualan.create'))->assertRedirect(route('login'));
+        $this->assertGuest();
+
+        // Pesan __('auth.inactive') tampil di halaman login. Assertion sesi (assertSessionHasErrors/Missing) sengaja
+        // dipanggil setelah request ini: memanggilnya pada respons redirect membuat flash error hilang di request berikutnya.
+        $this->get(route('login'))->assertOk()
+            ->assertSee(__('auth.inactive'))
+            ->assertSee('Akun Anda tidak aktif. Hubungi Administrator.')
+            ->assertSessionMissing('penanda'); // sesi lama sudah di-invalidate
+        $this->get(route('dashboard'))->assertRedirect(route('login'));
+    }
+
     // 4. Tamu membuka /dashboard → redirect login
     public function test_tamu_membuka_dashboard_diarahkan_ke_login(): void
     {

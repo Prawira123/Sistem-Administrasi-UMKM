@@ -10,6 +10,7 @@ use App\Models\NotifikasiStok;
 use App\Models\Penjualan;
 use App\Models\User;
 use App\Services\PenjualanService;
+use App\Services\ValidasiKasService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -127,6 +128,27 @@ class PenjualanTest extends TestCase
         $this->assertSame(0, NotifikasiStok::count());
         $this->assertSame(10, $aman->fresh()->stok);
         $this->assertSame(3, $kurang->fresh()->stok);
+    }
+
+    // Barang dengan harga jual Rp0 tidak bisa dijual dan tidak muncul di pencarian kasir
+    public function test_barang_harga_jual_nol_ditolak_dan_tidak_muncul_di_pencarian(): void
+    {
+        $normal = $this->barang(10, 1000, ['nama_barang' => 'Kopi Sachet']);
+        $gratis = $this->barang(10, 1000, ['nama_barang' => 'Kopi Bubuk', 'harga_jual' => 0]);
+
+        $this->jual($this->kasir, [
+            ['id_barang' => $normal->id_barang, 'jumlah' => 1],
+            ['id_barang' => $gratis->id_barang, 'jumlah' => 1],
+        ], 'tunai', 100000)->assertSessionHasErrors(['items' => 'Harga jual Kopi Bubuk belum diatur (Rp0) sehingga tidak bisa dijual.']);
+
+        $this->assertSame(0, Penjualan::count());
+        $this->assertSame(0, KartuStok::count());
+        $this->assertSame(0, Kas::count());
+        $this->assertSame(10, $normal->fresh()->stok);
+        $this->assertSame(10, $gratis->fresh()->stok);
+
+        $nama = collect($this->getJson(route('barang.cari', ['q' => 'kopi']))->assertOk()->json('data'))->pluck('nama');
+        $this->assertSame(['Kopi Sachet'], $nama->all());
     }
 
     // 4. Tunai: bayar kurang ditolak; kembalian benar
@@ -278,6 +300,45 @@ class PenjualanTest extends TestCase
             ->assertDontSee($milikSendiri->no_transaksi)->assertSee($milikLain->no_transaksi);
         $this->get(route('penjualan.show', $milikLain))->assertOk();
         $this->get(route('penjualan.nota', $milikLain))->assertOk();
+    }
+
+    public function test_pembatalan_penjualan_tunai_pada_tanggal_yang_kasnya_sudah_divalidasi_ditolak(): void
+    {
+        $barang = $this->barang(20, 1000);
+        $item = [['id_barang' => $barang->id_barang, 'jumlah' => 2]]; // 2 × 5.000 = 10.000
+
+        // 20/11: satu penjualan tunai dan satu QRIS, lalu kas tanggal itu divalidasi (tunai 10.000 sesuai).
+        $this->travelTo(now()->setDate(2026, 11, 20)->setTime(10, 0));
+        $this->jual($this->kasir, $item, 'tunai', 10000);
+        $tunai = Penjualan::latest('id_penjualan')->first();
+        $this->jual($this->kasir, $item, 'qris');
+        $qris = Penjualan::latest('id_penjualan')->first();
+        app(ValidasiKasService::class)->simpan('2026-11-20', '10000', null, $this->admin);
+
+        // 21/11: penjualan tunai pada tanggal yang belum divalidasi.
+        $this->travelTo(now()->setDate(2026, 11, 21)->setTime(10, 0));
+        $this->jual($this->kasir, $item, 'tunai', 10000);
+        $tunaiBelumValidasi = Penjualan::latest('id_penjualan')->first();
+
+        // Tombol batal disembunyikan dan pesan tampil; QRIS di tanggal yang sama tetap bisa dibatalkan.
+        $this->actingAs($this->admin)->get(route('penjualan.show', $tunai))->assertOk()
+            ->assertDontSee('Ya, batalkan')->assertSee(PenjualanService::PESAN_KAS_DIVALIDASI);
+        $this->get(route('penjualan.show', $qris))->assertOk()->assertSee('Ya, batalkan');
+
+        // Request langsung tetap ditolak di service; stok, kas, dan kartu stok tidak berubah.
+        $this->post(route('penjualan.batal', $tunai), ['alasan' => 'Salah input barang'])
+            ->assertSessionHasErrors(['alasan' => PenjualanService::PESAN_KAS_DIVALIDASI]);
+        $this->assertSame('selesai', $tunai->fresh()->status);
+        $this->assertSame(14, $barang->fresh()->stok);
+        $this->assertSame(3, Kas::where('kategori', 'penjualan')->count());
+        $this->assertSame(0, KartuStok::where('jenis_mutasi', 'penyesuaian')->count());
+
+        // QRIS di tanggal tervalidasi dan tunai di tanggal yang belum divalidasi masih bisa dibatalkan.
+        $this->post(route('penjualan.batal', $qris), ['alasan' => 'Salah scan'])->assertSessionHasNoErrors();
+        $this->post(route('penjualan.batal', $tunaiBelumValidasi), ['alasan' => 'Salah scan'])->assertSessionHasNoErrors();
+        $this->assertSame('batal', $qris->fresh()->status);
+        $this->assertSame('batal', $tunaiBelumValidasi->fresh()->status);
+        $this->assertSame(18, $barang->fresh()->stok);
     }
 
     public function test_pembatalan_transaksi_bulan_lalu_ditolak(): void

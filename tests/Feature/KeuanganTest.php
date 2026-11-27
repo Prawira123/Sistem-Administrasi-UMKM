@@ -12,10 +12,12 @@ use App\Models\User;
 use App\Models\ValidasiKas;
 use App\Services\BarangMasukService;
 use App\Services\KasService;
+use App\Services\PengeluaranService;
 use App\Services\PenjualanService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 use Tests\TestCase;
 
@@ -281,6 +283,85 @@ class KeuanganTest extends TestCase
         $oktober = HppPeriode::whereDate('periode_awal', '2026-10-01')->sole();
         $this->assertSame('0.00', $oktober->total_hpp);
         $this->assertSame('0.00', $oktober->hpp_per_unit);
+    }
+
+    // Keuangan hanya bulan berjalan: input baru ≥ awal bulan; data bulan lalu tidak bisa diubah/dihapus
+    public function test_keuangan_hanya_bulan_berjalan(): void
+    {
+        $listrik = $this->kategori();
+        $pengeluaranService = app(PengeluaranService::class);
+        $kasService = app(KasService::class);
+
+        // Data Oktober (dibuat lewat service saat masih Oktober).
+        $this->travelTo(now()->setDate(2026, 10, 20)->setTime(9, 0));
+        $lama = $pengeluaranService->simpan(['id_kategori_pengeluaran' => $listrik->id_kategori_pengeluaran,
+            'tanggal_pengeluaran' => '2026-10-20', 'deskripsi' => 'Listrik Oktober', 'jumlah' => '100000',
+            'metode_pembayaran' => 'tunai'], null, $this->admin);
+        $modalLama = $kasService->catat(KasService::MASUK, 'modal', '500000', [], $this->admin, now(), 'Modal Oktober');
+
+        $this->travelTo(now()->setDate(2026, 11, 24)->setTime(15, 0));
+        $this->actingAs($this->admin);
+
+        // Input baru: tanggal sebelum 01/11 ditolak, 01/11 diterima.
+        $data = ['id_kategori_pengeluaran' => $listrik->id_kategori_pengeluaran, 'deskripsi' => 'Token',
+            'jumlah' => 50000, 'metode_pembayaran' => 'tunai'];
+        $this->post(route('pengeluaran.store'), $data + ['tanggal_pengeluaran' => '2026-10-31'])
+            ->assertSessionHasErrors(['tanggal_pengeluaran' => 'Tanggal pengeluaran harus di bulan berjalan (mulai 01/11/2026).']);
+        $this->post(route('pengeluaran.store'), $data + ['tanggal_pengeluaran' => '2026-11-01'])->assertSessionHasNoErrors();
+        $baru = PengeluaranOperasional::where('tanggal_pengeluaran', '2026-11-01')->sole();
+
+        $this->post(route('kas.store'), ['kategori' => 'prive', 'tanggal' => '2026-10-31', 'jumlah' => 1000, 'keterangan' => 'X'])
+            ->assertSessionHasErrors(['tanggal' => 'Tanggal modal/prive harus di bulan berjalan (mulai 01/11/2026).']);
+        $this->post(route('kas.store'), ['kategori' => 'prive', 'tanggal' => '2026-11-01', 'jumlah' => 1000, 'keterangan' => 'Prive November'])
+            ->assertSessionHasNoErrors();
+        $priveBaru = Kas::where('kategori', 'prive')->sole();
+
+        $this->post(route('validasi-kas.store'), ['tanggal' => '2026-10-31', 'uang_fisik' => 0])
+            ->assertSessionHasErrors(['tanggal' => 'Validasi kas hanya untuk tanggal di bulan berjalan (mulai 01/11/2026).']);
+        $this->get(route('validasi-kas.create', ['tanggal' => '2026-10-31']))->assertSessionHasErrors('tanggal');
+        $this->post(route('validasi-kas.store'), ['tanggal' => '2026-11-01', 'uang_fisik' => 0])->assertSessionHasNoErrors();
+
+        // Pengeluaran Oktober: edit, ubah, dan hapus ditolak; data dan kasnya tetap.
+        $this->get(route('pengeluaran.edit', $lama))
+            ->assertRedirect(route('pengeluaran.index'))->assertSessionHas('error', PengeluaranService::PESAN_BULAN_LALU);
+        $this->put(route('pengeluaran.update', $lama), $data + ['tanggal_pengeluaran' => '2026-11-02'])
+            ->assertSessionHas('error', PengeluaranService::PESAN_BULAN_LALU);
+        $this->delete(route('pengeluaran.destroy', $lama))->assertSessionHas('error', PengeluaranService::PESAN_BULAN_LALU);
+        $lama->refresh();
+        $this->assertSame('2026-10-20', $lama->tanggal_pengeluaran->toDateString());
+        $this->assertSame('100000.00', $lama->jumlah);
+        $this->assertNotNull($lama->kas);
+
+        // Modal Oktober tidak bisa dihapus dari buku kas.
+        $this->delete(route('kas.destroy', $modalLama))->assertSessionHas('error', KasService::PESAN_BULAN_LALU);
+        $this->assertNotNull($modalLama->fresh());
+
+        // Service juga menolak (pertahanan kedua di luar controller).
+        foreach ([fn () => $pengeluaranService->hapus($lama), fn () => $kasService->hapusManual($modalLama)] as $aksi) {
+            try {
+                $aksi();
+                $this->fail('Data bulan lalu seharusnya ditolak.');
+            } catch (ValidationException) {
+            }
+        }
+
+        // Tombol: bulan lalu disembunyikan, bulan berjalan tetap ada.
+        $this->get(route('pengeluaran.index'))->assertOk()
+            ->assertSee('Terkunci')
+            ->assertDontSee(route('pengeluaran.edit', $lama), false)
+            ->assertDontSee(route('pengeluaran.destroy', $lama), false)
+            ->assertSee(route('pengeluaran.edit', $baru), false)
+            ->assertSee(route('pengeluaran.destroy', $baru), false);
+        $this->get(route('kas.index', ['dari' => '2026-10-01', 'sampai' => '2026-11-24']))->assertOk()
+            ->assertSee('Modal Oktober')
+            ->assertDontSee(route('kas.destroy', $modalLama), false)
+            ->assertSee(route('kas.destroy', $priveBaru), false);
+
+        // Data bulan berjalan tetap bisa diubah dan dihapus.
+        $this->put(route('pengeluaran.update', $baru), array_merge($data, ['tanggal_pengeluaran' => '2026-11-02', 'jumlah' => 60000]))
+            ->assertSessionHasNoErrors()->assertSessionMissing('error');
+        $this->assertSame('60000.00', $baru->fresh()->jumlah);
+        $this->delete(route('kas.destroy', $priveBaru))->assertSessionHas('success');
     }
 
     // 5. Kasir membuka halaman keuangan → 403

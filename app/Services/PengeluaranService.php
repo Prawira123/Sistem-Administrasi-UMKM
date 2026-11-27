@@ -8,6 +8,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Proses 6.0: pengeluaran operasional (beban). Setiap pengeluaran punya tepat satu baris kas
@@ -21,6 +22,8 @@ class PengeluaranService
     public const DISK = 'public';
 
     public const FOLDER_BUKTI = 'bukti';
+
+    public const PESAN_BULAN_LALU = 'Pengeluaran bulan sebelumnya tidak dapat diubah atau dihapus karena laporan periode tersebut sudah berjalan.';
 
     public function __construct(
         private readonly NomorOtomatisService $nomor,
@@ -76,6 +79,7 @@ class PengeluaranService
      */
     public function perbarui(PengeluaranOperasional $pengeluaran, array $data, ?UploadedFile $bukti, bool $hapusBukti = false): PengeluaranOperasional
     {
+        $this->pastikanBulanBerjalan($pengeluaran); // dicek dari tanggal lama, sebelum diisi data baru
         $lama = $pengeluaran->bukti;
         $baru = $bukti?->store(self::FOLDER_BUKTI, self::DISK);
 
@@ -117,6 +121,7 @@ class PengeluaranService
 
     public function hapus(PengeluaranOperasional $pengeluaran): void
     {
+        $this->pastikanBulanBerjalan($pengeluaran);
         $bukti = $pengeluaran->bukti;
 
         DB::transaction(function () use ($pengeluaran) {
@@ -126,6 +131,14 @@ class PengeluaranService
 
         if ($bukti) {
             Storage::disk(self::DISK)->delete($bukti);
+        }
+    }
+
+    /** Pengeluaran dengan tanggal sebelum awal bulan berjalan terkunci: laporan periode itu sudah berjalan. */
+    private function pastikanBulanBerjalan(PengeluaranOperasional $pengeluaran): void
+    {
+        if (! $pengeluaran->isBulanBerjalan()) {
+            throw ValidationException::withMessages(['tanggal_pengeluaran' => self::PESAN_BULAN_LALU]);
         }
     }
 

@@ -25,6 +25,8 @@ class PenjualanService
 
     public const PESAN_BULAN_LALU = 'Transaksi bulan sebelumnya tidak dapat dibatalkan karena laporan periode tersebut sudah berjalan.';
 
+    public const PESAN_KAS_DIVALIDASI = 'Penjualan tunai ini tidak dapat dibatalkan karena kas tanggal tersebut sudah divalidasi.';
+
     public function __construct(
         private readonly NomorOtomatisService $nomor,
         private readonly KartuStokService $kartuStok,
@@ -52,6 +54,10 @@ class PenjualanService
                 $barang = $daftarBarang[$idBarang];
                 if ($barang->status !== 'aktif') {
                     throw ValidationException::withMessages(['items' => "Barang {$barang->nama_barang} sudah nonaktif."]);
+                }
+                // Dicek setelah baris dikunci: harga yang dipakai adalah harga di database saat transaksi.
+                if (Uang::banding($barang->harga_jual, '0') <= 0) {
+                    throw ValidationException::withMessages(['items' => "Harga jual {$barang->nama_barang} belum diatur (Rp0) sehingga tidak bisa dijual."]);
                 }
                 if ($jumlah > $barang->stok) {
                     throw ValidationException::withMessages(['items' => "Stok {$barang->nama_barang} tidak cukup (sisa {$barang->stok})."]);
@@ -182,6 +188,12 @@ class PenjualanService
                 throw ValidationException::withMessages([
                     'alasan' => self::PESAN_BULAN_LALU,
                 ]);
+            }
+
+            // Penjualan tunai pada tanggal yang kasnya sudah divalidasi: uang fisik sudah dicocokkan dengan
+            // total tunai sistem, jadi pembatalan akan membuat validasi kas itu tidak lagi sesuai.
+            if ($penjualan->isKasSudahDivalidasi()) {
+                throw ValidationException::withMessages(['alasan' => self::PESAN_KAS_DIVALIDASI]);
             }
 
             $penjualan->status = 'batal';
